@@ -1,0 +1,13 @@
+**/publish/
+obj/
+bin/
+publish/
+TestResults/
+.vs/
+*.application
+*.manifest
+*.exe
+**/obj
+**/bin
+*.suo
+*.csproj.user
