@@ -5,6 +5,7 @@ using SolversLibrary.PI;
 using MathNet.Numerics.Distributions;
 using MathNet.Numerics.Statistics;
 using System;
+using MathNet.Numerics.LinearAlgebra.Double;
 
 namespace SolverTests
 {
@@ -59,7 +60,7 @@ namespace SolverTests
             var originalData = new double[N];
             for (int i = 0; i < N; i++)
                 originalData[i] = Normal.Sample(0.0, 1.0);
-            var ipf = new IPF();
+            var ipf = new IPFSparse();
             var data = new DataTable(new Dictionary<string, double[]> {
                 { "x", originalData }
             });
@@ -74,7 +75,7 @@ namespace SolverTests
                 } }
             };
 
-            var weights = ipf.ComputeSampleWeights(data, targets);
+            var weights = ipf.ComputeSampleWeights(data, targets, 1);
 
             var newSamples = ipf.Resample(data, weights);
 
@@ -118,6 +119,46 @@ namespace SolverTests
                 { false, false, false, true }, // 9
                 { false, false, false, true } // 10
             };
+            var interQuantiles = new double[] { 0.25, 0.25, 0.25, 0.25 };
+            var startWeights = ipf.Uniform(11, 1.0 / 11.0);
+            var weights = ipf.UpdateVariable(data, sampleIndicators, startWeights, interQuantiles);
+
+            // Expected values are for each inter-quantile q_i: q_i / N_i, where N_i is the number of samples in that inter-quantile.
+            var expected = new double[] {
+                0.25 / 3, 0.25 / 3, 0.25 / 3, // q0
+                0.25 / 2, 0.25 / 2, // q1
+                0.25 / 2, 0.25 / 2, // q2
+                0.25 / 4, 0.25 / 4, 0.25 / 4, 0.25 / 4 // q3
+            };
+
+            CollectionAssert.AreEqual(expected.Select(w => Math.Round(w, 6)).ToArray(), weights.Select(w => Math.Round(w, 6)).ToArray());
+        }
+
+        /// <summary>
+        /// Performs one variable update pass. We sample from a uniform distribution [0, 10].
+        /// The resampled quantiles should be 0.25=2, 0.5=4 and 0.75=6.
+        /// </summary>
+        [TestMethod, TestCategory("PI")]
+        public void IPF_VariableUpdate_Sparse()
+        {
+            var ipf = new IPFSparse();
+            var data = new DataTable(new Dictionary<string, double[]> {
+                { "x", new double[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 } }
+            });
+
+            var sampleIndicators = new SparseMatrix(11, 4);
+            sampleIndicators[0, 0] = 1;
+            sampleIndicators[1, 0] = 1;
+            sampleIndicators[2, 0] = 1;
+            sampleIndicators[3, 1] = 1;
+            sampleIndicators[4, 1] = 1;
+            sampleIndicators[5, 2] = 1;
+            sampleIndicators[6, 2] = 1;
+            sampleIndicators[7, 3] = 1;
+            sampleIndicators[8, 3] = 1;
+            sampleIndicators[9, 3] = 1;
+            sampleIndicators[10, 3] = 1;
+
             var interQuantiles = new double[] { 0.25, 0.25, 0.25, 0.25 };
             var startWeights = ipf.Uniform(11, 1.0 / 11.0);
             var weights = ipf.UpdateVariable(data, sampleIndicators, startWeights, interQuantiles);
