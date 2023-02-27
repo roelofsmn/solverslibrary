@@ -56,6 +56,9 @@
     <Compile Include="DictionaryExtensions.cs" />
     <Compile Include="OneToManyMap.cs" />
     <Compile Include="OneToOneMap.cs" />
+    <Compile Include="PI\DataTable.cs" />
+    <Compile Include="PI\IDataTable.cs" />
+    <Compile Include="PI\IPF.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

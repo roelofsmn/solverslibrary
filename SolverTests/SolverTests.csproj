@@ -35,7 +35,13 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="MathNet.Numerics, Version=4.9.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\MathNet.Numerics.4.9.1\lib\net40\MathNet.Numerics.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System" />
+    <Reference Include="System.Numerics" />
+    <Reference Include="System.Runtime.Serialization" />
   </ItemGroup>
   <Choose>
     <When Condition="('$(VisualStudioVersion)' == '10.0' or '$(VisualStudioVersion)' == '') and '$(TargetFrameworkVersion)' == 'v3.5'">
@@ -55,12 +61,17 @@
     <Compile Include="CSPTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="AssignmentProblemTest.cs" />
+    <Compile Include="IPFTest.cs" />
+    <Compile Include="DatatableTest.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\SolversLibrary\SolversLibrary.csproj">
       <Project>{e1da1b64-6041-4c78-9830-6946c58be478}</Project>
       <Name>SolversLibrary</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
   </ItemGroup>
   <Choose>
     <When Condition="'$(VisualStudioVersion)' == '10.0' And '$(IsCodedUITest)' == 'True'">
