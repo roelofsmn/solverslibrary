@@ -13,21 +13,31 @@ namespace SolversLibrary.PI
     /// </summary>
     public class IPFSparse
     {
-        public SparseMatrix BinIndicators(double[] values, double[] binEdges)
+        public List<int>[][] BinIndicators(IDataTable values, Dictionary<string, double[]> binEdges, string[] variables)
         {
-            var binIndicators = new SparseMatrix(values.Length, binEdges.Length - 1);
-
-            Parallel.For(0, values.Length, i =>
+            var binIndicators = new int[values.NumberOfRows, binEdges.Count];
+            var quantileSampleIndicators = new List<int>[variables.Length][];
+            
+            Parallel.For(0, variables.Length, v =>
             {
-                for (int j = 1; j < binEdges.Length; j++)
+                var variable = variables[v];
+                quantileSampleIndicators[v] = new List<int>[binEdges[variable].Length - 1];
+                for (int j = 1; j < binEdges[variable].Length; j++)
+                    quantileSampleIndicators[v][j - 1] = new List<int>();
+
+                for (int i = 0; i < values.NumberOfRows; i++)
                 {
-                    //var min = j == 0 ? double.NegativeInfinity : quantileValues[j - 1];
-                    //var max = j == quantileValues.Length - 1 ? double.PositiveInfinity : quantileValues[j];
-                    if (values[i] > binEdges[j - 1] && values[i] <= binEdges[j])
-                        binIndicators[i, j - 1] = 1;
+                    for (int j = 1; j < binEdges[variable].Length; j++)
+                    {
+                        if (values[variable][i] > binEdges[variable][j - 1] && values[variable][i] <= binEdges[variable][j])
+                        {
+                            binIndicators[i, v] = j - 1;
+                            quantileSampleIndicators[v][j - 1].Add(i);
+                        }
+                    }
                 }
             });
-            return binIndicators;
+            return quantileSampleIndicators;
         }
 
         public double[] Uniform(int N, double value)
@@ -48,8 +58,10 @@ namespace SolversLibrary.PI
         /// <returns></returns>
         public double[] ComputeSampleWeights(IDataTable samples, IDictionary<string, Dictionary<double, double>> quantileConstraints, int maxIter = 100)
         {
+            var variables = quantileConstraints.Keys.ToArray();
+
             //var quantiles = new Dictionary<string, Dictionary<double, double>>();
-            var sampleIndicators = new Dictionary<string, SparseMatrix>();
+            var variableQuantileValues = new Dictionary<string, double[]>();
             var variableInterQuantiles = new Dictionary<string, double[]>();
             foreach (var variable in quantileConstraints.Keys.ToArray())
             {
@@ -64,13 +76,11 @@ namespace SolversLibrary.PI
                     sortedInterQuantiles[i - 1] = sortedQuantiles[i] - sortedQuantiles[i - 1];
                 variableInterQuantiles.Add(variable, sortedInterQuantiles);
 
-                //quantiles.Add(variable, sortedQuantiles);
-
-                // Indicator matrix of size (number of samples, number of inter-quantiles for this variable)
-                var sampleIndicatorsForVariable = BinIndicators(samples[variable], sortedQuantileValues);
-
-                sampleIndicators.Add(variable, sampleIndicatorsForVariable);
+                variableQuantileValues.Add(variable, sortedQuantileValues);
             }
+
+            // Indicator matrix of size (number of samples, number of inter-quantiles for this variable)
+            var sampleIndicators = BinIndicators(samples, variableQuantileValues, variables);
 
             // Initialize sample weights
             var sampleWeights = Uniform(samples.NumberOfRows, 1.0 / (double)samples.NumberOfRows);
@@ -79,41 +89,49 @@ namespace SolversLibrary.PI
             for (int iter = 0; iter < maxIter; iter++)
             {
                 Debug.WriteLine($"Iteration {iter}");
-                foreach (var variable in quantileConstraints.Keys.ToArray())
+                for (int v = 0; v < variables.Length; v++)
                 {
                     sampleWeights = UpdateVariable(
                         samples,
-                        sampleIndicators[variable],
+                        v,
+                        sampleIndicators,
                         sampleWeights,
-                        variableInterQuantiles[variable]);
+                        variableInterQuantiles[variables[v]]);
                 }
             }
             return sampleWeights;
         }
 
-        public double[] UpdateVariable(IDataTable samples, SparseMatrix sampleIndicators, double[] sampleWeights, double[] variableInterQuantiles)
+        public double[] UpdateVariable(IDataTable samples, int variableIndex, List<int>[][] sampleIndicators, double[] sampleWeights, double[] variableInterQuantiles)
         {
             double[] nextSampleWeights = new double[samples.NumberOfRows];
             var denominators = new double[variableInterQuantiles.Length];
-            foreach (var tuple in sampleIndicators.Storage.EnumerateNonZeroIndexed())
-                denominators[tuple.Item2] += sampleWeights[tuple.Item1];
+
+            Parallel.For(0, variableInterQuantiles.Length, q =>
+            {
+                foreach (var sample in sampleIndicators[variableIndex][q])
+                    denominators[q] += sampleWeights[sample];
+            });
 
             if (denominators.Any(d => d <= 0.0))
                 throw new ArgumentOutOfRangeException(nameof(denominators));
 
-            foreach (var tuple in sampleIndicators.Storage.EnumerateNonZeroIndexed())
-            {
-                double nominator = sampleWeights[tuple.Item1] * variableInterQuantiles[tuple.Item2];
-                nextSampleWeights[tuple.Item1] += nominator / denominators[tuple.Item2];
-            }
+            Parallel.For(0, variableInterQuantiles.Length, q => {
+                var interQuantileSamples = sampleIndicators[variableIndex][q];
+                foreach (var sample in interQuantileSamples)
+                {
+                    double nominator = sampleWeights[sample] * variableInterQuantiles[q];
+                    nextSampleWeights[sample] += nominator / denominators[q];
+                }
+            });
             return nextSampleWeights;
         }
 
-        public IDataTable Resample(IDataTable samples, double[] weights, int amount = 0)
+        public IDataTable Resample(IDataTable samples, double[] weights, int amount = 0, Random rnd = null)
         {
             if (amount <= 0)
                 amount = samples.NumberOfRows;
-            Multinomial mult = new Multinomial(weights, amount);
+            Multinomial mult = new Multinomial(weights, amount, rnd);
             var indexCounts = mult.Sample();
 
             DataTable newSamples = new DataTable(samples.ColumnNames);
