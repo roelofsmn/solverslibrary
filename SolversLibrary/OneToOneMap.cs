@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Runtime.Serialization;
 using System.Linq;
 using System.Diagnostics;
-using Base;
 
 namespace Solvers
 {
@@ -151,22 +150,6 @@ namespace Solvers
         public IEnumerable<Tvalue> BCollection
         {
             get { return BtoA.Keys; }
-        }
-    }
-
-    public class MapEqualityComparer<T1, T2> : IEqualityComparer<OneToOneMap<T1, T2>> where T1 : class
-    {
-        public bool Equals(OneToOneMap<T1, T2> x, OneToOneMap<T1, T2> y)
-        {
-            foreach (var a in x.ACollection)
-                if (!y.Contains(a) || !x.MapTo(x.B, a).Equals(y.MapTo(y.B, a)))
-                    return false;
-            return true;
-        }
-
-        public int GetHashCode(OneToOneMap<T1, T2> obj)
-        {
-            return HashcodeHelper.GetCollectionHashcode(obj.GetMapsAB());
         }
     }
 }
