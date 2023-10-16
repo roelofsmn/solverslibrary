@@ -1,0 +1,35 @@
+name: Build and publish Nuget package
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ "master" ]
+    paths:
+    - SolversLibrary/*
+    - .github/workflows/build-pack.yml
+  pull_request:
+    branches: [ "master" ]
+    paths:
+    - SolversLibrary/*
+    - .github/workflows/build-pack.yml
+
+jobs:
+  build:
+    name: 'Build and Publish Nuget'
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+    - name: Build library
+      run: dotnet build --configuration Release
+    - name: Pack
+      run: |
+        cd SolversLibrary
+        dotnet pack -c Release -o out
+    - name: Publish
+      run: dotnet nuget push ./SolversLibrary/out/$(ls ./SolversLibrary/out) -s https://nuget.pkg.github.com/ussalcrab/index.json -k ${GITHUB_TOKEN}  
+      env:
+       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
