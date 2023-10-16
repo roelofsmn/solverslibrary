@@ -32,4 +32,4 @@ jobs:
     - name: Publish
       run: dotnet nuget push ./SolversLibrary/out/$(ls ./SolversLibrary/out) -s https://nuget.pkg.github.com/ussalcrab/index.json -k ${GITHUB_TOKEN}  
       env:
-       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
+       GITHUB_TOKEN: ${{ secrets.NUGET_KEY }} 
