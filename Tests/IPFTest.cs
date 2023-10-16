@@ -53,7 +53,7 @@ namespace Tests
         [Trait("Category", "PI")]
         public void Test_IPF()
         {
-            int N = 10000;
+            int N = 100000;
             var originalData = new double[N];
             for (int i = 0; i < N; i++)
                 originalData[i] = ContinuousUniform.Sample(0.0, 1.0);
