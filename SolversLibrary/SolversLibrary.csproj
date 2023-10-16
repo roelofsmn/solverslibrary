@@ -5,9 +5,14 @@
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <AssemblyTitle>SolversLibrary</AssemblyTitle>
     <Product>SolversLibrary</Product>
-    <Copyright>Copyright ©  2020</Copyright>
-    <AssemblyVersion>1.0.0.0</AssemblyVersion>
-    <FileVersion>1.0.0.0</FileVersion>
+    <Copyright>Copyright © Martijn Roelofs</Copyright>
+    <AssemblyVersion>1.0.0</AssemblyVersion>
+    <FileVersion>1.0.0</FileVersion>
+    <Title>solvers</Title>
+    <Authors>Martijn Roelofs</Authors>
+    <Company>GraphWright</Company>
+    <Description>Some solvers for combinatorial problems and probabilistic inversion</Description>
+    <PackageTags>hungarian algorithm;constraint satisfaction problem;probabilistic inversion;iterative proportional fitting</PackageTags>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
