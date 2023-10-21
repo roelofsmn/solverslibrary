@@ -32,6 +32,6 @@ jobs:
     - name: Publish
       run: |
         cd SolversLibrary/out
-        dotnet nuget push SolversLibrary.1.0.0.nupkg --api-key ${NUGET_KEY} --source https://api.nuget.org/v3/index.json
+        dotnet nuget push SolversLibrary.1.0.0.nupkg --api-key ${NUGET_KEY} --source https://api.nuget.org/v3/index.json --skip-duplicate
       env:
        NUGET_KEY: ${{ secrets.NUGET_KEY }} 
