@@ -30,6 +30,8 @@ jobs:
         cd SolversLibrary
         dotnet pack -c Release -o out
     - name: Publish
-      run: dotnet nuget push SolversLibrary.1.0.0.nupkg --api-key ${NUGET_KEY} --source https://api.nuget.org/v3/index.json
+      run: |
+        cd SolversLibrary/out
+        dotnet nuget push SolversLibrary.1.0.0.nupkg --api-key ${NUGET_KEY} --source https://api.nuget.org/v3/index.json
       env:
        NUGET_KEY: ${{ secrets.NUGET_KEY }} 
