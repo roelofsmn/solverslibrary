@@ -55,8 +55,9 @@ namespace Tests
         {
             int N = 100000;
             var originalData = new double[N];
+            var random = new Random(69);
             for (int i = 0; i < N; i++)
-                originalData[i] = ContinuousUniform.Sample(0.0, 1.0);
+                originalData[i] = ContinuousUniform.Sample(random, 0.0, 1.0);
             var ipf = new IPFSparse();
             var data = new DataTable(new Dictionary<string, double[]> {
                 { "x", originalData }
@@ -74,7 +75,7 @@ namespace Tests
 
             var weights = ipf.ComputeSampleWeights(data, targets, 1);
 
-            var newSamples = ipf.Resample(data, weights);
+            var newSamples = ipf.Resample(data, weights, rnd: random);
 
             Assert.Equal(ContinuousUniform.InvCDF(0.1, 0.2, 0.05), newSamples["x"].Quantile(0.05), 0.01);
             Assert.Equal(ContinuousUniform.InvCDF(0.1, 0.2, 0.5), newSamples["x"].Quantile(0.5), 0.01);
