@@ -113,8 +113,8 @@ namespace SolversLibrary.PI
                     denominators[q] += sampleWeights[sample];
             });
 
-            if (denominators.Any(d => d <= 0.0))
-                throw new ArgumentOutOfRangeException(nameof(denominators));
+            //if (denominators.Any(d => d < 0.0))
+            //    throw new ArgumentOutOfRangeException(nameof(denominators));
 
             Parallel.For(0, variableInterQuantiles.Length, q => {
                 var interQuantileSamples = sampleIndicators[variableIndex][q];
@@ -135,7 +135,7 @@ namespace SolversLibrary.PI
             var indexCounts = mult.Sample();
 
             DataTable newSamples = new DataTable(samples.ColumnNames);
-            for (int i = 0; i < amount; i++)
+            for (int i = 0; i < weights.Length; i++)
             {
                 for (int k = 0; k < indexCounts[i]; k++)
                     newSamples.AddRow(samples.GetRow(i));
