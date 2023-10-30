@@ -31,4 +31,4 @@ jobs:
     - name: Pack
       run: dotnet pack ${{ env.PROJECT_PATH }} --no-restore -c Release -p:PackageVersion=${{ steps.version.outputs.version-without-v }} --output ${{ env.OUTPUT_PATH }}
     - name: Publish
-      run: dotnet nuget push ${{ env.OUTPUT_PATH }}\*.nupkg --api-key ${{ secrets.NUGET_KEY }} --source ${{ env.NUGET_SOURCE_URL }}
+      run: dotnet nuget push ${{ env.OUTPUT_PATH }}/*.nupkg --api-key ${{ secrets.NUGET_KEY }} --source ${{ env.NUGET_SOURCE_URL }}
