@@ -13,7 +13,6 @@
     <Company>GraphWright</Company>
     <Description>Some solvers for combinatorial problems and probabilistic inversion</Description>
     <PackageTags>hungarian algorithm;constraint satisfaction problem;probabilistic inversion;iterative proportional fitting</PackageTags>
-    <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
