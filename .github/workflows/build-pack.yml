@@ -3,15 +3,13 @@ name: Build and publish Nuget package
 on:
   workflow_dispatch:
   push:
-    branches: [ "master" ]
-    paths:
-    - SolversLibrary/*
-    - .github/workflows/build-pack.yml
-  pull_request:
-    branches: [ "master" ]
-    paths:
-    - SolversLibrary/*
-    - .github/workflows/build-pack.yml
+    tags:
+      - 'v*'
+
+env:
+  PROJECT_PATH: 'SolversLibrary'
+  OUTPUT_PATH: ${{ github.workspace }}/output
+  NUGET_SOURCE_URL: https://api.nuget.org/v3/index.json
 
 jobs:
   build:
@@ -23,15 +21,18 @@ jobs:
       uses: actions/checkout@v3
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
+    - name: Restore packages
+      run: dotnet restore ${{ env.PROJECT_PATH }}
     - name: Build library
-      run: dotnet build --configuration Release
+      run: dotnet build ${{ env.PROJECT_PATH }} --no-restore --configuration Release
+    - name: Get version
+      id: version
+      uses: battila7/get-version-action@v2
     - name: Pack
       run: |
         cd SolversLibrary
-        dotnet pack -c Release -o out
+        dotnet pack ${{ env.PROJECT_PATH }} --no-restore -c Release -p:PackageVersion=${{ steps.version.outputs.version-without-v }} --output ${{ env.OUTPUT_PATH }}
     - name: Publish
       run: |
         cd SolversLibrary/out
-        dotnet nuget push SolversLibrary.1.0.0.nupkg --api-key ${NUGET_KEY} --source https://api.nuget.org/v3/index.json --skip-duplicate
-      env:
-       NUGET_KEY: ${{ secrets.NUGET_KEY }} 
+        dotnet nuget push ${{ env.OUTPUT_PATH }}\*.nupkg --api-key ${{ secrets.NUGET_KEY }} --source ${{ env.NUGET_SOURCE_URL }}
