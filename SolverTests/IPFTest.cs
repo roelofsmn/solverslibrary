@@ -56,28 +56,28 @@ namespace SolverTests
         [TestMethod, TestCategory("PI")]
         public void Test_IPF()
         {
-            int N = 10000;
-            var originalData = new double[N];
-            for (int i = 0; i < N; i++)
-                originalData[i] = ContinuousUniform.Sample(0.0, 1.0);
+            //int N = 10000;
+            //var originalData = new double[N];
+            //for (int i = 0; i < N; i++)
+            //    originalData[i] = ContinuousUniform.Sample(0.0, 1.0);
             var ipf = new IPFSparse();
             var data = new DataTable(new Dictionary<string, double[]> {
-                { "x", originalData }
+                { "x", new double[] { 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9 } }
             });
 
             var targets = new Dictionary<string, Dictionary<double, double>>
             {
                 { "x", new Dictionary<double, double>
                 {
-                    { 0.05, ContinuousUniform.InvCDF(0.1, 0.2, 0.05) },
-                    { 0.5, ContinuousUniform.InvCDF(0.1, 0.2, 0.5) },
-                    { 0.95, ContinuousUniform.InvCDF(0.1, 0.2, 0.95) }
+                    { 0.0001, 0 },
+                    { 0.5, 0.15 },
+                    { 0.9999, 0.3 }
                 } }
             };
 
             var weights = ipf.ComputeSampleWeights(data, targets, 1);
 
-            var newSamples = ipf.Resample(data, weights);
+            var newSamples = ipf.Resample(data, weights, 100, new Random(42));
 
             Assert.AreEqual(ContinuousUniform.InvCDF(0.1, 0.2, 0.05), newSamples["x"].Quantile(0.05), 0.01);
             Assert.AreEqual(ContinuousUniform.InvCDF(0.1, 0.2, 0.5), newSamples["x"].Quantile(0.5), 0.01);

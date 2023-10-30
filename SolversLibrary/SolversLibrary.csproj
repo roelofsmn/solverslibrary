@@ -33,8 +33,8 @@
     <Reference Include="BaseLibrary">
       <HintPath>..\..\BaseLibrary\BaseLibrary\bin\Debug\BaseLibrary.dll</HintPath>
     </Reference>
-    <Reference Include="MathNet.Numerics, Version=4.9.1.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\MathNet.Numerics.4.9.1\lib\net40\MathNet.Numerics.dll</HintPath>
+    <Reference Include="MathNet.Numerics, Version=4.12.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\ProductionTool\packages\MathNet.Numerics.4.12.0\lib\net40\MathNet.Numerics.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="System" />
@@ -56,6 +56,7 @@
     <Compile Include="DictionaryExtensions.cs" />
     <Compile Include="OneToManyMap.cs" />
     <Compile Include="OneToOneMap.cs" />
+    <Compile Include="Optimization\LinearProgramming.cs" />
     <Compile Include="PI\DataTable.cs" />
     <Compile Include="PI\IDataTable.cs" />
     <Compile Include="PI\IPFSparse.cs" />
