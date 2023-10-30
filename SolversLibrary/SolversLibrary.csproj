@@ -13,6 +13,9 @@
     <Company>GraphWright</Company>
     <Description>Some solvers for combinatorial problems and probabilistic inversion</Description>
     <PackageTags>hungarian algorithm;constraint satisfaction problem;probabilistic inversion;iterative proportional fitting</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
@@ -23,5 +26,11 @@
   </ItemGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="$(AssemblyName).Tests" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="LICENSE" Pack="true" Visible="false" PackagePath=""/>
+  </ItemGroup>
+  <ItemGroup>
+      <None Include="README.md" Pack="true" PackagePath="\"/>
   </ItemGroup>
 </Project>
