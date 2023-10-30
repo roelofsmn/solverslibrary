@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Runtime.Serialization;
 using System.Linq;
 using System.Diagnostics;
-using Base;
 
 namespace Solvers
 {
@@ -100,19 +99,4 @@ namespace Solvers
         }
     }
 
-    public class ManyMapEqualityComparer<T1, T2> : IEqualityComparer<OneToManyMap<T1, T2>> where T1 : class
-    {
-        public bool Equals(OneToManyMap<T1, T2> x, OneToManyMap<T1, T2> y)
-        {
-            foreach (var a in x.ACollection)
-                if (!y.Contains(a) || !x.MapForward(a).Equals(y.MapForward(a)))
-                    return false;
-            return true;
-        }
-
-        public int GetHashCode(OneToManyMap<T1, T2> obj)
-        {
-            return HashcodeHelper.GetCollectionHashcode(obj.GetMapsAB());
-        }
-    }
 }
