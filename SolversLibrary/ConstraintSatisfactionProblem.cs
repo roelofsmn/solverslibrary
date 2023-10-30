@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Solvers
 {
@@ -31,8 +29,9 @@ namespace Solvers
         /// Constraint on whole solution that returns true when satisfied
         /// </summary>
         public Func<Dictionary<Tvar, Tval>, bool> SolutionConstraint { private get; set; }
+
         /// <summary>
-        /// Score of a solution, higher is better
+        /// Score of a solution, higher is better. Makes the CSP only return solutions with score equal to the maximum.
         /// </summary>
         public Func<Dictionary<Tvar, Tval>, int> SolutionScore { private get; set; }
 
@@ -129,7 +128,7 @@ namespace Solvers
             else
                 _solutions.Add(_currentSolution.ToDictionary(kv => { return kv.Key; }, kv => { return kv.Value; }, _variableComparer));
         }
-        private int _maxScore = 0;
+        private int _maxScore = int.MinValue;
 
         private void BackTrack(Dictionary<Tvar, List<Tval>> remainingVariables)
         {
