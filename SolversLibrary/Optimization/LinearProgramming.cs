@@ -4,6 +4,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using MathNet.Numerics.LinearAlgebra.Complex;
 
 namespace SolversLibrary.Optimization
 {
@@ -21,7 +22,7 @@ namespace SolversLibrary.Optimization
         /// <param name="Aeq">Equality constraint LHS</param>
         /// <param name="beq">Equality constraint RHS</param>
         /// <returns></returns>
-        public static double[] Solve(double[,] A, double[] b, double[] c, double[] x0 = null, double[,] Aeq = null, double[] beq = null)
+        public static double[][] Solve(double[,] A, double[] b, double[] c, double[] x0 = null, double[,] Aeq = null, double[] beq = null)
         {
             bool hasEqConstraint = Aeq != null;
             if (Aeq == null)
@@ -38,14 +39,21 @@ namespace SolversLibrary.Optimization
             var eqConstraints = Enumerable.Range(b.Length, beq.Length);
 
             var Amat = Matrix<double>.Build.DenseOfArray(A);
-            var Aeqmat = Matrix<double>.Build.DenseOfArray(Aeq);
-            var Atotal = Matrix<double>.Build.DenseOfMatrixArray(new Matrix<double>[,] { { Amat }, { Aeqmat } });
+                        
             var b0 = Amat * curSol;
             var activeConstraints = b.Select((s, i) => i).Where(i => Precision.AlmostEqualRelative(b[i], b0[i], 1e-9)).ToList();
+
+            Matrix<double> Atotal;
             if (hasEqConstraint)
             {
+                var Aeqmat = Matrix<double>.Build.DenseOfArray(Aeq);
+                Atotal = Matrix<double>.Build.DenseOfMatrixArray(new Matrix<double>[,] { { Amat }, { Aeqmat } });
                 var b0eq = Aeqmat * curSol;
-                activeConstraints.AddRange(beq.Select((s, i) => i).Where(i => Precision.AlmostEqualRelative(beq[i], b0eq[i], 1e-9)));
+                activeConstraints.AddRange(beq.Select((s, i) => i).Where(i => Precision.AlmostEqualRelative(beq[i], b0eq[i], 1e-9)).Select(i => i + b.Length));
+            }
+            else
+            {
+                Atotal = Matrix<double>.Build.DenseOfMatrixArray(new Matrix<double>[,] { { Amat } });
             }
             if (activeConstraints.Count > x0.Length)
                 activeConstraints = activeConstraints.Take(x0.Length).ToList();
@@ -53,6 +61,11 @@ namespace SolversLibrary.Optimization
             // Select only part of Amat that represents active constraints
             var A0 = Matrix<double>.Build.DenseOfRowVectors(activeConstraints.Select(ac => Atotal.Row(ac)));
             var D = A0.Inverse();
+
+            Vector<double> solPreviousStep = null;
+            Vector<double> solSecondPreviousStep = null;
+
+            var solutions = new List<Vector<double>>();
 
             while (true)
             {
@@ -62,7 +75,10 @@ namespace SolversLibrary.Optimization
                 var searchDir = ArgMax(search.ToArray(), activeConstraints.Select(ac => ineqConstraints.Contains(ac)).ToArray());
 
                 if (search[searchDir] < 0)
+                {
+                    solutions.Add(curSol);
                     break;
+                }
 
                 var alpha = double.PositiveInfinity;
                 int j = -1;
@@ -93,12 +109,32 @@ namespace SolversLibrary.Optimization
                         }
                     }
                     if (j == -1)
+                    {
+                        solutions.Add(curSol);
                         break;
+                    }
                 }
                 activeConstraints[searchDir] = j;
 
                 // update current point
                 curSol = curSol - alpha * D.Column(searchDir);
+
+                #region Check for oscillations (i.e. cycling between two solutions)
+                if (solPreviousStep == null)
+                    solPreviousStep = curSol;
+                else if (solSecondPreviousStep == null)
+                {
+                    // check if current solution is same as a previous solution...
+                    solSecondPreviousStep = solPreviousStep;
+                    solPreviousStep = curSol;
+                }
+                else if (curSol.Equals(solSecondPreviousStep))
+                {
+                    solutions.Add(curSol);
+                    solutions.Add(solPreviousStep);
+                    break;
+                }
+                #endregion
 
                 var newColumns = new Vector<double>[D.ColumnCount];
                 // update D
@@ -109,7 +145,7 @@ namespace SolversLibrary.Optimization
                 newColumns[searchDir] = D.Column(searchDir) / (Atotal.Row(j) * D.Column(searchDir));
                 D = Matrix<double>.Build.DenseOfColumnVectors(newColumns);
             }
-            return curSol.ToArray();
+            return solutions.Select(sol => sol.ToArray()).ToArray();
         }
 
         public static double[] FindInitialSolution(double[,] A, double[] b)
