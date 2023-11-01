@@ -225,5 +225,55 @@ namespace Tests
                 Assert.Equal(x_actual[i], x_optimal[i], 2, MidpointRounding.AwayFromZero);
             }
         }
+
+        [Fact]
+        [Trait("Category", "Linear Programming")]
+        public void OilRecipes_Forward_InequalityDefinition()
+        {
+            // Problem from http://kirkmcdonald.github.io/posts/calculation.html but inverse
+            /* x = [ HOC, LOC, BOP, AOP ]
+             * Maximize Petroleum
+             * We want to produce AT LEAST a certain amount of materials
+             * So for the outputs, we specify a positive value
+             * For the rest of the materials (intermediates and inputs) we need 0 or more
+             * So the problem is subject to:
+             * g1 (HO):     -40 HOC + 30 BOP + 10 AOP >= 0
+             * g2 (LO):     30 HOC - 30 LOC + 30 BOP + 45 AOP >= 0
+             * g3 (P):      20 LOC + 40 BOP + 55 AOP >= 0
+             * g4-g7:      xi >= 0 // constrain all variables to be positive
+             * h1 (Crude oil):  100 BOP + 100 AOP <= 58.97
+             * h2 (Water):      30 HOC + 30 LOC + 50 AOP <= 42.69
+             * We can flip all the signs (greater than to lesser than) by multiplying all numbers by -1
+             * We have to because our solver expects inequality constraints in the form of A * x <= b
+             */
+
+            double[,] A =
+            {
+                { 40, 0, -30, -10 }, // heavy oil
+                { -30, 30, -30, -45 }, // light oil
+                { 0, -20, -40, -55 }, // petroleum
+                { 30, 30, 0, 50 }, // water
+                { 0, 0, 100, 100 }, // crude oil
+                { -1, 0, 0, 0 },
+                { 0, -1, 0, 0 },
+                { 0, 0, -1, 0 },
+                { 0, 0, 0, -1 }
+            };
+            double[] b = { 0, 0, 0, 42.69, 58.97, 0, 0, 0, 0};
+            //double[] c = { 0, -20, -40, -55 }; // Maximize Petroleum (so minimize its negative value)
+            // Perhaps same as for 45 to 10 ratio of petroleum vs heavy oil, i.e. maximize both in that ratio
+            double[] c = { 10 * 40, 45 * -20, 10 * -30 - 40 * 45, -10 * 10 - 55 * 45 };
+
+            // Expected solution is same as for backwards problem, because there we minimized resource use for certain amount petroleum
+            var x_actual = new double[] { 0.00, 0.78, 0.21, 0.38 };
+
+            var x_optimal = LinearProgramming.Solve(A, b, c)[0];
+
+            Assert.Equal(4, x_optimal.Length);
+            for (int i = 0; i < 4; i++)
+            {
+                Assert.Equal(x_actual[i], x_optimal[i], 2, MidpointRounding.AwayFromZero);
+            }
+        }
     }
 }
