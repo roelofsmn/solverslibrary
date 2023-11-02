@@ -240,9 +240,9 @@ namespace Tests
              * g1 (HO):     -40 HOC + 30 BOP + 10 AOP >= 0
              * g2 (LO):     30 HOC - 30 LOC + 30 BOP + 45 AOP >= 0
              * g3 (P):      20 LOC + 40 BOP + 55 AOP >= 0
-             * g4-g7:      xi >= 0 // constrain all variables to be positive
-             * h1 (Crude oil):  100 BOP + 100 AOP <= 58.97
-             * h2 (Water):      30 HOC + 30 LOC + 50 AOP <= 42.69
+             * g6-g9:      xi >= 0 // constrain all variables to be positive
+             * g5 (Crude oil):  100 BOP + 100 AOP <= 58.97
+             * g4 (Water):      30 HOC + 30 LOC + 50 AOP <= 42.69
              * We can flip all the signs (greater than to lesser than) by multiplying all numbers by -1
              * We have to because our solver expects inequality constraints in the form of A * x <= b
              */
