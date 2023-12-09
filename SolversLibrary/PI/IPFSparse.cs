@@ -15,13 +15,13 @@ namespace SolversLibrary.PI
     {
         public List<int>[][] BinIndicators(IDataTable values, Dictionary<string, double[]> binEdges, string[] variables)
         {
-            var binIndicators = new int[values.NumberOfRows, binEdges.Count];
-            var quantileSampleIndicators = new List<int>[variables.Length][];
+            //var binIndicators = new int[values.NumberOfRows, binEdges.Count];
+            var quantileSampleIndicators = new List<int>[variables.Length][]; // variables x inter-quantiles x samples in inter-quantile
             
             Parallel.For(0, variables.Length, v =>
             {
                 var variable = variables[v];
-                quantileSampleIndicators[v] = new List<int>[binEdges[variable].Length - 1];
+                quantileSampleIndicators[v] = new List<int>[binEdges[variable].Length - 1]; // one for each inter-quantile
                 for (int j = 1; j < binEdges[variable].Length; j++)
                     quantileSampleIndicators[v][j - 1] = new List<int>();
 
@@ -31,7 +31,7 @@ namespace SolversLibrary.PI
                     {
                         if (values[variable][i] > binEdges[variable][j - 1] && values[variable][i] <= binEdges[variable][j])
                         {
-                            binIndicators[i, v] = j - 1;
+                            //binIndicators[i, v] = j - 1;
                             quantileSampleIndicators[v][j - 1].Add(i);
                         }
                     }
@@ -134,11 +134,16 @@ namespace SolversLibrary.PI
             Multinomial mult = new Multinomial(weights, amount, rnd);
             var indexCounts = mult.Sample();
 
-            DataTable newSamples = new DataTable(samples.ColumnNames);
+            DataTable newSamples = new DataTable(samples.ColumnNames, weights.Length);
+            int row = 0;
             for (int i = 0; i < weights.Length; i++)
             {
+                var sampleRow = samples.GetRow(i);
                 for (int k = 0; k < indexCounts[i]; k++)
-                    newSamples.AddRow(samples.GetRow(i));
+                {
+                    newSamples.SetRow(row, sampleRow);
+                    row++;
+                }
             }
 
             return newSamples;

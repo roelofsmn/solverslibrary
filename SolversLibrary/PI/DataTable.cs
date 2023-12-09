@@ -11,16 +11,16 @@ namespace SolversLibrary.PI
             _columns = new Dictionary<string, double[]>();
             _numberRows = 0;
         }
-        public DataTable(IEnumerable<string> columns)
+        public DataTable(IEnumerable<string> columns, int numRows = 0)
         {
             _columns = new Dictionary<string, double[]>();
             foreach (var c in columns)
-                _columns.Add(c, new double[0]);
-            _numberRows = 0;
+                _columns.Add(c, new double[numRows]);
+            _numberRows = numRows;
         }
         public DataTable(IDictionary<string, double[]> data)
         {
-            _numberRows = data.Select(kvp => kvp.Value.Length).Distinct().Single();                
+            _numberRows = data.Select(kvp => kvp.Value.Length).Distinct().Single(); // distinct and single to ensure each column has equal amount of rows
             _columns = new Dictionary<string, double[]>(data);
         }
         private Dictionary<string, double[]> _columns;
@@ -92,7 +92,13 @@ namespace SolversLibrary.PI
                 throw new ArgumentException();
             foreach (var kvp in row)
                 _columns[kvp.Key] = _columns[kvp.Key].Concat(new double[] { kvp.Value }).ToArray();
+            _numberRows++;
+        }
 
+        public void SetRow(int index, IDictionary<string, double> row)
+        {
+            foreach (var kvp in row)
+                _columns[kvp.Key][index] = kvp.Value;
         }
     }
 }

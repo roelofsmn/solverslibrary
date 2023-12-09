@@ -11,6 +11,7 @@ namespace SolversLibrary.PI
         void SetData(string[] columnNames, double[,] values);
         double[] GetColumn(string name);
         IDictionary<string, double> GetRow(int index);
+        void SetRow(int index, IDictionary<string, double> row);
         IEnumerable<string> ColumnNames { get; }
         void AddRow(IDictionary<string, double> row);
 
