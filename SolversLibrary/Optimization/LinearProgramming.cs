@@ -62,8 +62,7 @@ namespace SolversLibrary.Optimization
             var A0 = Matrix<double>.Build.DenseOfRowVectors(activeConstraints.Select(ac => Atotal.Row(ac)));
             var D = A0.Inverse();
 
-            Vector<double> solPreviousStep = null;
-            Vector<double> solSecondPreviousStep = null;
+            int? prevSearchDir = null;
 
             var solutions = new List<Vector<double>>();
 
@@ -116,24 +115,21 @@ namespace SolversLibrary.Optimization
                 }
                 activeConstraints[searchDir] = j;
 
+                // Already add current (i.e. previous) solution to solutions.
+                if (searchDir == prevSearchDir)
+                    solutions.Add(curSol);
+
                 // update current point
                 curSol = curSol - alpha * D.Column(searchDir);
 
                 #region Check for oscillations (i.e. cycling between two solutions)
-                if (solPreviousStep == null)
-                    solPreviousStep = curSol;
-                else if (solSecondPreviousStep == null)
-                {
-                    // check if current solution is same as a previous solution...
-                    solSecondPreviousStep = solPreviousStep;
-                    solPreviousStep = curSol;
-                }
-                else if (curSol.Equals(solSecondPreviousStep))
+
+                if (searchDir == prevSearchDir)
                 {
                     solutions.Add(curSol);
-                    solutions.Add(solPreviousStep);
                     break;
                 }
+                prevSearchDir = searchDir;
                 #endregion
 
                 var newColumns = new Vector<double>[D.ColumnCount];

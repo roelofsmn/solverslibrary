@@ -80,6 +80,8 @@ namespace Tests
                 Assert.Equal(solution.First[0], solution.Second[0], 2, MidpointRounding.AwayFromZero);
                 Assert.Equal(solution.First[1], solution.Second[1], 2, MidpointRounding.AwayFromZero);
             }
+
+
         }
 
         [Fact]
@@ -249,28 +251,32 @@ namespace Tests
 
             double[,] A =
             {
-                { 40, 0, -30, -10 }, // heavy oil
-                { -30, 30, -30, -45 }, // light oil
-                { 0, -20, -40, -55 }, // petroleum
-                { 30, 30, 0, 50 }, // water
-                { 0, 0, 100, 100 }, // crude oil
-                { -1, 0, 0, 0 },
-                { 0, -1, 0, 0 },
-                { 0, 0, -1, 0 },
-                { 0, 0, 0, -1 }
+                { 0,0, 40, 0, -30, -10 }, // heavy oil
+                { 0,0, -30, 30, -30, -45 }, // light oil
+                { 0,0, 0, -20, -40, -55 }, // petroleum
+                { -1,0, 30, 30, 0, 50 }, // water
+                { 0,-1, 0, 0, 100, 100 }, // crude oil
+                { -1,0, 0, 0, 0, 0 },
+                { 0,-1, 0, 0, 0, 0 },
+                { 0,0, -1, 0, 0, 0 },
+                { 0,0, 0, -1, 0, 0 },
+                { 0,0, 0, 0, -1, 0 },
+                { 0,0, 0, 0, 0, -1 },
+                { 1,0, 0, 0, 0, 0 },
+                { 0,1, 0, 0, 0, 0 }
             };
-            double[] b = { 0, 0, 0, 42.69, 58.97, 0, 0, 0, 0};
+            double[] b = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 42.69, 58.97 };
             //double[] c = { 0, -20, -40, -55 }; // Maximize Petroleum (so minimize its negative value)
             // Perhaps same as for 45 to 10 ratio of petroleum vs heavy oil, i.e. maximize both in that ratio
-            double[] c = { 10 * 40, 45 * -20, 10 * -30 - 40 * 45, -10 * 10 - 55 * 45 };
+            double[] c = { 0, 0, 10 * 40, 45 * -20, 10 * -30 - 40 * 45, -10 * 10 - 55 * 45 };
 
             // Expected solution is same as for backwards problem, because there we minimized resource use for certain amount petroleum
-            var x_actual = new double[] { 0.00, 0.78, 0.21, 0.38 };
+            var x_actual = new double[] { 42.69, 58.97, 0.00, 0.78, 0.21, 0.38 };
 
             var x_optimal = LinearProgramming.Solve(A, b, c)[0];
 
-            Assert.Equal(4, x_optimal.Length);
-            for (int i = 0; i < 4; i++)
+            Assert.Equal(6, x_optimal.Length);
+            for (int i = 0; i < 6; i++)
             {
                 Assert.Equal(x_actual[i], x_optimal[i], 2, MidpointRounding.AwayFromZero);
             }
