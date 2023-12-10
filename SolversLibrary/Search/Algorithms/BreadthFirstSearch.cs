@@ -39,25 +39,13 @@ namespace SolversLibrary.Search.Algorithms
                         if (problemStatement.IsTerminal(childState))
                             return new SearchSolution<T>(
                                 initialState,
-                                GetActionsToNode(child),
+                                child.GetActionsToNode(),
                                 childState);
                         _frontier.Enqueue(child);
                     }
                 }
             }
             throw new NoSolutionFoundException();
-        }
-
-        internal static ISearchAction<T>[] GetActionsToNode(SearchNode<T> node)
-        {
-            LinkedList<ISearchAction<T>> actions = new LinkedList<ISearchAction<T>>();
-            var currentNode = node;
-            while (currentNode.Parent != null)
-            {
-                actions.AddFirst(currentNode.Action ?? throw new NullReferenceException("Search node action is null, while parent isn't."));
-                currentNode = currentNode.Parent;
-            }
-            return actions.ToArray();
         }
     }
 }

@@ -23,7 +23,7 @@ namespace Tests.Search
             var second = Substitute.For<SearchNode<string>>("second", first, action2);
 
             // Act
-            var results = BreadthFirstSearch<string>.GetActionsToNode(second);
+            var results = second.GetActionsToNode();
 
             // Assert
             Assert.Equal(2, results.Length);
@@ -32,7 +32,7 @@ namespace Tests.Search
         }
 
         [Fact]
-        public void Search_Traversal()
+        public void BreadthFirstSearch()
         {
             // See section 3.4, page 85 of Artificial Intelligence: A Modern Approach, 3rd edition, S.J. Russell and P. Norvig
             // Assign
@@ -76,7 +76,7 @@ namespace Tests.Search
         }
 
         [Fact]
-        public void Search_Traversal_CommonNodeOnPath()
+        public void BreadthFirstSearch_CommonNodeOnPath()
         {
             // See section 3.4, page 85 of Artificial Intelligence: A Modern Approach, 3rd edition, S.J. Russell and P. Norvig
             // Assign
