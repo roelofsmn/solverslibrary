@@ -10,19 +10,19 @@ using System.Threading.Tasks;
 
 namespace SolversLibrary.Search.Algorithms
 {
-    public class UniformCostSearch<T> : ICostSearchAlgorithm<T>
+    public class AstarSearch<T> : IHeuristicSearchAlgorithm<T>
     {
         private PriorityTraversalStrategy<CostSearchNode<T>> strategy;
         private HashSet<T> _explored;
         private SearchNodeStateComparer<T> searchNodeComparer;
 
-        public UniformCostSearch(IEqualityComparer<T>? stateEquality = null)
+        public AstarSearch(IEqualityComparer<T>? stateEquality = null)
         {
             strategy = new PriorityTraversalStrategy<CostSearchNode<T>>();
             _explored = new HashSet<T>(stateEquality);
             searchNodeComparer = new SearchNodeStateComparer<T>();
         }
-        public CostSearchSolution<T> Search(ICostSearchProblem<T> problemStatement, T initialState)
+        public CostSearchSolution<T> Search(IHeuristicSearchProblem<T> problemStatement, T initialState)
         {
             strategy.Clear();
             _explored.Clear();
@@ -51,7 +51,8 @@ namespace SolversLibrary.Search.Algorithms
                     CostSearchNode<T>? matchingSearchNode = strategy.Find(child, searchNodeComparer);
                     if (!_explored.Contains(childState) && matchingSearchNode == null)
                         strategy.AddCandidateState(child);
-                    else if (matchingSearchNode != null && matchingSearchNode.Cost > child.Cost)
+                    else if (matchingSearchNode != null 
+                        && matchingSearchNode.Cost + problemStatement.Heuristic(matchingSearchNode.State) > child.Cost + problemStatement.Heuristic(child.State))
                         strategy.ReplaceCandidateState(matchingSearchNode, child);
                 }
             }

@@ -15,4 +15,9 @@ namespace SolversLibrary.Search
     {
         CostSearchSolution<T> Search(ICostSearchProblem<T> problemStatement, T initialState);
     }
+    internal interface IHeuristicSearchAlgorithm<T>
+    {
+        CostSearchSolution<T> Search(IHeuristicSearchProblem<T> problemStatement, T initialState);
+    }
+
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -29,5 +30,20 @@ namespace SolversLibrary.Search
 
         private double _cost;
         public double Cost => _cost;
+    }
+
+    internal class SearchNodeStateComparer<T> : IEqualityComparer<CostSearchNode<T>>
+    {
+        public bool Equals(CostSearchNode<T>? x, CostSearchNode<T>? y)
+        {
+            if (ReferenceEquals(x, null) || ReferenceEquals(y, null) || ReferenceEquals(x.State, null))
+                return false;
+            return x.State.Equals(y.State);
+        }
+
+        public int GetHashCode([DisallowNull] CostSearchNode<T> obj)
+        {
+            return obj.GetHashCode();
+        }
     }
 }
