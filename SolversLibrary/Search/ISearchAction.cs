@@ -14,6 +14,10 @@ namespace SolversLibrary.Search
         /// <param name="state">The search state to apply the action to.</param>
         /// <returns>A collection of states resulting from the action.</returns>
         T Apply(T state);
+    }
+
+    public interface ICostSearchAction<T> : ISearchAction<T>
+    {
         double Cost(T state);
     }
 }

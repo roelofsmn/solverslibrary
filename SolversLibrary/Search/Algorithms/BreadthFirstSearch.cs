@@ -16,15 +16,15 @@ namespace SolversLibrary.Search.Algorithms
             _frontier = new Queue<SearchNode<T>>();
             _explored = new HashSet<T>(stateEquality);
         }
-        public IEnumerable<SearchSolution<T>> Search(ISearchProblem<T> problemStatement, T initialState)
+        public SearchSolution<T> Search(ISearchProblem<T> problemStatement, T initialState)
         {
             _frontier.Clear();
             _explored.Clear();
 
             if (problemStatement.IsTerminal(initialState))
-                yield return new SearchSolution<T>(initialState, Array.Empty<ISearchAction<T>>(), 0.0, initialState);
+                return new SearchSolution<T>(initialState, Array.Empty<ISearchAction<T>>(), initialState);
 
-            _frontier.Enqueue(new SearchNode<T>(initialState, null, null, 0.0));
+            _frontier.Enqueue(new SearchNode<T>(initialState, null, null));
 
             while (_frontier.Count > 0)
             {
@@ -33,20 +33,19 @@ namespace SolversLibrary.Search.Algorithms
                 foreach (var action in problemStatement.Branch(node.State))
                 {
                     var childState = action.Apply(node.State);
-                    var actionCost = action.Cost(node.State);
                     if (!_explored.Contains(childState))
                     {
-                        var child = new SearchNode<T>(childState, node, action, node.PathCost + actionCost);
+                        var child = new SearchNode<T>(childState, node, action);
                         if (problemStatement.IsTerminal(childState))
-                            yield return new SearchSolution<T>(
+                            return new SearchSolution<T>(
                                 initialState,
                                 GetActionsToNode(child),
-                                child.PathCost,
                                 childState);
                         _frontier.Enqueue(child);
                     }
                 }
             }
+            throw new NoSolutionFoundException();
         }
 
         internal static ISearchAction<T>[] GetActionsToNode(SearchNode<T> node)

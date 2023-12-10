@@ -6,18 +6,27 @@ using System.Threading.Tasks;
 
 namespace SolversLibrary.Search
 {
-    public struct SearchSolution<T>
+    public class SearchSolution<T>
     {
-        public SearchSolution(T initialState, ISearchAction<T>[] actionPath, double totalCost, T terminalState)
+        public SearchSolution(T initialState, ISearchAction<T>[] actionPath, T terminalState)
         {
             InitialState = initialState;
             ActionPath = actionPath;
-            TotalCost = totalCost;
             TerminalState = terminalState;
         }
-        public readonly T InitialState { get; init; }
-        public readonly ISearchAction<T>[] ActionPath { get; init; }
-        public readonly double TotalCost { get; init; }
-        public readonly T TerminalState { get; init; }
+        public T InitialState { get; init; }
+        public ISearchAction<T>[] ActionPath { get; init; }
+        public T TerminalState { get; init; }
+    }
+
+    public class CostSearchSolution<T> : SearchSolution<T>, ICost
+    {
+        public CostSearchSolution(T initialState, ISearchAction<T>[] actionPath, T terminalState, double totalCost) : base(initialState, actionPath, terminalState)
+        {
+            _totalCost = totalCost;
+        }
+
+        private double _totalCost;
+        public double Cost => _totalCost;
     }
 }
