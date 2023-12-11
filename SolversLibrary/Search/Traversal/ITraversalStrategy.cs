@@ -10,8 +10,6 @@ namespace SolversLibrary.Search.Traversal
     {
         T NextState();
         void AddCandidateState(T state);
-        void ReplaceCandidateState(T current, T replacement);
-
         bool ContainsCandidates();
         bool Contains(T state);
         void Clear();

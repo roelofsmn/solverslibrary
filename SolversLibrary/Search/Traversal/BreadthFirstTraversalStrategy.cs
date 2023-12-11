@@ -37,10 +37,5 @@ namespace SolversLibrary.Search.Traversal
         {
             return frontier.Dequeue();
         }
-
-        public void ReplaceCandidateState(T current, T replacement)
-        {
-            throw new NotImplementedException();
-        }
     }
 }

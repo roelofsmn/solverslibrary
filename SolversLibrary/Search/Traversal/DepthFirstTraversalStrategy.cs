@@ -37,10 +37,5 @@ namespace SolversLibrary.Search.Traversal
         {
             return frontier.Pop();
         }
-
-        public void ReplaceCandidateState(T current, T replacement)
-        {
-            throw new NotImplementedException();
-        }
     }
 }
