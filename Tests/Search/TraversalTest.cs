@@ -1,4 +1,5 @@
 ﻿using NSubstitute;
+using SolversLibrary.Search;
 using SolversLibrary.Search.Traversal;
 using System;
 using System.Collections.Generic;
@@ -100,6 +101,73 @@ namespace Tests.Search
 
             // Assert
             Assert.Equal(new string[] { "a", "c", "b", "e", "d" }, results);
+        }
+
+        [Fact]
+        public void PriorityTraversal_AddCandidateState()
+        {
+            var costState = Substitute.For<ICost>();
+            costState.Cost.Returns(5);
+            var strategy = new PriorityTraversalStrategy<ICost>();
+
+            // Act
+            strategy.AddCandidateState(costState);
+
+            // Assert
+            Assert.True(strategy.ContainsCandidates());
+            Assert.True(strategy.Contains(costState));
+        }
+        [Fact]
+        public void PriorityTraversal_NextState()
+        {
+            var costState = Substitute.For<ICost>();
+            costState.Cost.Returns(5);
+            var strategy = new PriorityTraversalStrategy<ICost>();
+
+            // Act
+            strategy.AddCandidateState(costState);
+            var next = strategy.NextState();
+
+            // Assert
+            Assert.Same(costState, next);
+            Assert.False(strategy.ContainsCandidates());
+            Assert.False(strategy.Contains(costState));
+        }
+        [Fact]
+        public void PriorityTraversal_ReplaceCandidateState()
+        {
+            var costState = Substitute.For<ICost>();
+            costState.Cost.Returns(5);
+            var replacement = Substitute.For<ICost>();
+            replacement.Cost.Returns(2);
+            var strategy = new PriorityTraversalStrategy<ICost>();
+
+            // Act
+            strategy.AddCandidateState(costState);
+            strategy.ReplaceCandidateState(costState, replacement);
+
+            // Assert
+            Assert.True(strategy.ContainsCandidates());
+            Assert.False(strategy.Contains(costState));
+            Assert.True(strategy.Contains(replacement));
+        }
+        [Fact]
+        public void PriorityTraversal_ReplaceCandidateState_NextState()
+        {
+            var costState = Substitute.For<ICost>();
+            costState.Cost.Returns(5);
+            var replacement = Substitute.For<ICost>();
+            replacement.Cost.Returns(2);
+            var strategy = new PriorityTraversalStrategy<ICost>();
+
+            // Act
+            strategy.AddCandidateState(costState);
+            strategy.ReplaceCandidateState(costState, replacement);
+            var next = strategy.NextState();
+
+            // Assert
+            Assert.False(strategy.ContainsCandidates());
+            Assert.Same(replacement, next);
         }
     }
 }

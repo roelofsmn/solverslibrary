@@ -61,7 +61,11 @@ namespace SolversLibrary.Search.Traversal
 
         public void ReplaceCandidateState(T current, T replacement)
         {
-            frontier[current.Cost].Remove(current);
+            if (frontier[current.Cost].Count == 1)
+                frontier.Remove(current.Cost);
+            else
+                frontier[current.Cost].Remove(current);
+
             AddCandidateState(replacement);
         }
 
