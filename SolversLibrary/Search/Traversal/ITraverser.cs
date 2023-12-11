@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace SolversLibrary.Search.Traversal
 {
-    public interface ITraversal<T>
+    public interface ITraverser<T>
     {
         IEnumerable<T> Traverse(T start);
     }

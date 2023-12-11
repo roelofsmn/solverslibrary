@@ -25,7 +25,7 @@ namespace Tests.Search
             var strategy = new BreadthFirstTraversalStrategy<string>();
 
             // Act
-            var traverser = new GraphTraversal<string>(
+            var traverser = new GraphTraverser<string>(
                 explorer,
                 strategy);
             var results = traverser.Traverse("a").ToArray();
@@ -48,7 +48,7 @@ namespace Tests.Search
             var strategy = new DepthFirstTraversalStrategy<string>();
 
             // Act
-            var traverser = new GraphTraversal<string>(
+            var traverser = new GraphTraverser<string>(
                 explorer,
                 strategy);
             var results = traverser.Traverse("a").ToArray();
@@ -71,7 +71,7 @@ namespace Tests.Search
             var strategy = new BreadthFirstTraversalStrategy<string>();
 
             // Act
-            var traverser = new TreeTraversal<string>(
+            var traverser = new TreeTraverser<string>(
                 explorer,
                 strategy);
             var results = traverser.Traverse("a").ToArray();
@@ -94,7 +94,7 @@ namespace Tests.Search
             var strategy = new DepthFirstTraversalStrategy<string>();
 
             // Act
-            var traverser = new TreeTraversal<string>(
+            var traverser = new TreeTraverser<string>(
                 explorer,
                 strategy);
             var results = traverser.Traverse("a").ToArray();
