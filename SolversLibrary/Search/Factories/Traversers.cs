@@ -4,10 +4,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SolversLibrary.Search
+namespace SolversLibrary.Search.Factories
 {
-    public interface ICost
+    public enum Traversers
     {
-        double Cost { get; }
+        Graph,
+        Tree
     }
 }

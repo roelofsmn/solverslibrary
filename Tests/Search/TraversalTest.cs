@@ -15,12 +15,28 @@ namespace Tests.Search
         public void BreadthFirstGraphTraversal()
         {
             // Assign
-            var explorer = Substitute.For<IExploreFunction<string, string>>();
-            explorer.Branch("a").Returns(new string[] { "b", "c" });
-            explorer.Branch("b").Returns(new string[] { "d", "c" });
-            explorer.Branch("c").Returns(new string[] { "e" });
-            explorer.Branch("d").Returns(new string[] { });
-            explorer.Branch("e").Returns(new string[] { });
+            var explorer = Substitute.For<IBranchingFunction<string>>();
+
+            var ab = Substitute.For<ITraversal<string>>();
+            ab.Traverse("a").Returns("b");
+
+            var ac = Substitute.For<ITraversal<string>>();
+            ac.Traverse("a").Returns("c");
+
+            var bd = Substitute.For<ITraversal<string>>();
+            bd.Traverse("b").Returns("d");
+
+            var bc = Substitute.For<ITraversal<string>>();
+            bc.Traverse("b").Returns("c");
+
+            var ce = Substitute.For<ITraversal<string>>();
+            ce.Traverse("c").Returns("e");
+
+            explorer.Branch("a").Returns(new ITraversal<string>[] { ab, ac });
+            explorer.Branch("b").Returns(new ITraversal<string>[] { bd, bc });
+            explorer.Branch("c").Returns(new ITraversal<string>[] { ce });
+            explorer.Branch("d").Returns(new ITraversal<string>[] { });
+            explorer.Branch("e").Returns(new ITraversal<string>[] { });
 
             var strategy = new BreadthFirstTraversalStrategy<string>();
 
@@ -38,12 +54,28 @@ namespace Tests.Search
         public void DepthFirstGraphTraversal()
         {
             // Assign
-            var explorer = Substitute.For<IExploreFunction<string, string>>();
-            explorer.Branch("a").Returns(new string[] { "b", "c" });
-            explorer.Branch("b").Returns(new string[] { "d", "c" });
-            explorer.Branch("c").Returns(new string[] { "e" });
-            explorer.Branch("d").Returns(new string[] { });
-            explorer.Branch("e").Returns(new string[] { });
+            var explorer = Substitute.For<IBranchingFunction<string>>();
+
+            var ab = Substitute.For<ITraversal<string>>();
+            ab.Traverse("a").Returns("b");
+
+            var ac = Substitute.For<ITraversal<string>>();
+            ac.Traverse("a").Returns("c");
+
+            var bd = Substitute.For<ITraversal<string>>();
+            bd.Traverse("b").Returns("d");
+
+            var bc = Substitute.For<ITraversal<string>>();
+            bc.Traverse("b").Returns("c");
+
+            var ce = Substitute.For<ITraversal<string>>();
+            ce.Traverse("c").Returns("e");
+
+            explorer.Branch("a").Returns(new ITraversal<string>[] { ab, ac });
+            explorer.Branch("b").Returns(new ITraversal<string>[] { bd, bc });
+            explorer.Branch("c").Returns(new ITraversal<string>[] { ce });
+            explorer.Branch("d").Returns(new ITraversal<string>[] { });
+            explorer.Branch("e").Returns(new ITraversal<string>[] { });
 
             var strategy = new DepthFirstTraversalStrategy<string>();
 
@@ -61,12 +93,25 @@ namespace Tests.Search
         public void BreadthFirstTreeTraversal()
         {
             // Assign
-            var explorer = Substitute.For<IExploreFunction<string, string>>();
-            explorer.Branch("a").Returns(new string[] { "b", "c" });
-            explorer.Branch("b").Returns(new string[] { "d", "e" });
-            explorer.Branch("c").Returns(new string[] { });
-            explorer.Branch("d").Returns(new string[] { });
-            explorer.Branch("e").Returns(new string[] { });
+            var explorer = Substitute.For<IBranchingFunction<string>>();
+
+            var ab = Substitute.For<ITraversal<string>>();
+            ab.Traverse("a").Returns("b");
+
+            var ac = Substitute.For<ITraversal<string>>();
+            ac.Traverse("a").Returns("c");
+
+            var bd = Substitute.For<ITraversal<string>>();
+            bd.Traverse("b").Returns("d");
+
+            var be = Substitute.For<ITraversal<string>>();
+            be.Traverse("b").Returns("e");
+
+            explorer.Branch("a").Returns(new ITraversal<string>[] { ab, ac });
+            explorer.Branch("b").Returns(new ITraversal<string>[] { bd, be });
+            explorer.Branch("c").Returns(new ITraversal<string>[] { });
+            explorer.Branch("d").Returns(new ITraversal<string>[] { });
+            explorer.Branch("e").Returns(new ITraversal<string>[] { });
 
             var strategy = new BreadthFirstTraversalStrategy<string>();
 
@@ -84,12 +129,25 @@ namespace Tests.Search
         public void DepthFirstTreeTraversal()
         {
             // Assign
-            var explorer = Substitute.For<IExploreFunction<string, string>>();
-            explorer.Branch("a").Returns(new string[] { "b", "c" });
-            explorer.Branch("b").Returns(new string[] { "d", "e" });
-            explorer.Branch("c").Returns(new string[] { });
-            explorer.Branch("d").Returns(new string[] { });
-            explorer.Branch("e").Returns(new string[] { });
+            var explorer = Substitute.For<IBranchingFunction<string>>();
+
+            var ab = Substitute.For<ITraversal<string>>();
+            ab.Traverse("a").Returns("b");
+
+            var ac = Substitute.For<ITraversal<string>>();
+            ac.Traverse("a").Returns("c");
+
+            var bd = Substitute.For<ITraversal<string>>();
+            bd.Traverse("b").Returns("d");
+
+            var be = Substitute.For<ITraversal<string>>();
+            be.Traverse("b").Returns("e");
+
+            explorer.Branch("a").Returns(new ITraversal<string>[] { ab, ac });
+            explorer.Branch("b").Returns(new ITraversal<string>[] { bd, be });
+            explorer.Branch("c").Returns(new ITraversal<string>[] { });
+            explorer.Branch("d").Returns(new ITraversal<string>[] { });
+            explorer.Branch("e").Returns(new ITraversal<string>[] { });
 
             var strategy = new DepthFirstTraversalStrategy<string>();
 
@@ -106,9 +164,8 @@ namespace Tests.Search
         [Fact]
         public void PriorityTraversal_AddCandidateState()
         {
-            var costState = Substitute.For<ICost>();
-            costState.Cost.Returns(5);
-            var strategy = new PriorityTraversalStrategy<ICost>();
+            var costState = "a";
+            var strategy = new PriorityTraversalStrategy<string>(x => 5);
 
             // Act
             strategy.AddCandidateState(costState);
@@ -120,9 +177,8 @@ namespace Tests.Search
         [Fact]
         public void PriorityTraversal_NextState()
         {
-            var costState = Substitute.For<ICost>();
-            costState.Cost.Returns(5);
-            var strategy = new PriorityTraversalStrategy<ICost>();
+            var costState = "a";
+            var strategy = new PriorityTraversalStrategy<string>(x => 5);
 
             // Act
             strategy.AddCandidateState(costState);
@@ -136,11 +192,9 @@ namespace Tests.Search
         [Fact]
         public void PriorityTraversal_ReplaceCandidateState()
         {
-            var costState = Substitute.For<ICost>();
-            costState.Cost.Returns(5);
-            var replacement = Substitute.For<ICost>();
-            replacement.Cost.Returns(2);
-            var strategy = new PriorityTraversalStrategy<ICost>();
+            var costState = "a";
+            var replacement = "b";
+            var strategy = new PriorityTraversalStrategy<string>(x => x == "a" ? 5 : 2);
 
             // Act
             strategy.AddCandidateState(costState);
@@ -154,11 +208,9 @@ namespace Tests.Search
         [Fact]
         public void PriorityTraversal_ReplaceCandidateState_NextState()
         {
-            var costState = Substitute.For<ICost>();
-            costState.Cost.Returns(5);
-            var replacement = Substitute.For<ICost>();
-            replacement.Cost.Returns(2);
-            var strategy = new PriorityTraversalStrategy<ICost>();
+            var costState = "a";
+            var replacement = "b";
+            var strategy = new PriorityTraversalStrategy<string>(x => x == "a" ? 5 : 2);
 
             // Act
             strategy.AddCandidateState(costState);

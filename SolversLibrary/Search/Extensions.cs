@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SolversLibrary.Search.Traversal;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,9 +9,9 @@ namespace SolversLibrary.Search
 {
     internal static class Extensions
     {
-        internal static ISearchAction<T>[] GetActionsToNode<T>(this SearchNode<T> node)
+        internal static ITraversal<T>[] GetActionsToNode<T>(this SearchNode<T> node)
         {
-            LinkedList<ISearchAction<T>> actions = new LinkedList<ISearchAction<T>>();
+            LinkedList<ITraversal<T>> actions = new LinkedList<ITraversal<T>>();
             var currentNode = node;
             while (currentNode.Parent != null)
             {

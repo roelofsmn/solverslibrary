@@ -1,4 +1,5 @@
 ﻿using MathNet.Numerics.Distributions;
+using SolversLibrary.Search.Factories;
 using SolversLibrary.Search.Traversal;
 using System;
 using System.Collections.Generic;
@@ -10,53 +11,17 @@ using System.Threading.Tasks;
 
 namespace SolversLibrary.Search.Algorithms
 {
-    public class AstarSearch<T> : IHeuristicSearchAlgorithm<T>
+    // Difference between A* search and Branch-and-Bound optimization is that B&B does not have a definition for IsTerminal.
+    // In other words, B&B only considers the objective function, whereas A* knows of a certain goal state to reach.
+    public class AstarSearch<T> : UniformCostSearch<T>
     {
-        private PriorityTraversalStrategy<CostSearchNode<T>> strategy;
-        private HashSet<T> _explored;
-        private SearchNodeStateComparer<T> searchNodeComparer;
-
-        public AstarSearch(IEqualityComparer<T>? stateEquality = null)
+        public AstarSearch(
+            Traversers traverseType,
+            IBranchingFunction<T> branchingFunction,
+            IHeuristic<T> heuristic,
+            IEqualityComparer<T>? stateEquality = null)
+            : base(traverseType, branchingFunction, x => x.Cost + heuristic.Heuristic(x.State), stateEquality)
         {
-            strategy = new PriorityTraversalStrategy<CostSearchNode<T>>();
-            _explored = new HashSet<T>(stateEquality);
-            searchNodeComparer = new SearchNodeStateComparer<T>();
-        }
-        public CostSearchSolution<T> Search(IHeuristicSearchProblem<T> problemStatement, T initialState)
-        {
-            strategy.Clear();
-            _explored.Clear();
-
-            if (problemStatement.IsTerminal(initialState))
-                return new CostSearchSolution<T>(initialState, Array.Empty<ISearchAction<T>>(), initialState, 0.0);
-
-            strategy.AddCandidateState(new CostSearchNode<T>(initialState, null, null, 0.0));
-
-            while (strategy.ContainsCandidates())
-            {
-                CostSearchNode<T> node = strategy.NextState();
-                if (problemStatement.IsTerminal(node.State))
-                    return new CostSearchSolution<T>(
-                        initialState,
-                        node.GetActionsToNode(),
-                        node.State,
-                        node.Cost);
-
-                _explored.Add(node.State);
-                foreach (var action in problemStatement.Branch(node.State))
-                {
-                    var childState = action.Apply(node.State);
-                    var actionCost = action.Cost(node.State);
-                    var child = new CostSearchNode<T>(childState, node, action, node.Cost + actionCost);
-                    CostSearchNode<T>? matchingSearchNode = strategy.Find(child, searchNodeComparer);
-                    if (!_explored.Contains(childState) && matchingSearchNode == null)
-                        strategy.AddCandidateState(child);
-                    else if (matchingSearchNode != null 
-                        && matchingSearchNode.Cost + problemStatement.Heuristic(matchingSearchNode.State) > child.Cost + problemStatement.Heuristic(child.State))
-                        strategy.ReplaceCandidateState(matchingSearchNode, child);
-                }
-            }
-            throw new NoSolutionFoundException();
         }
     }
 }

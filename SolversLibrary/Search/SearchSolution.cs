@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SolversLibrary.Search.Traversal;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,25 +9,16 @@ namespace SolversLibrary.Search
 {
     public class SearchSolution<T>
     {
-        public SearchSolution(T initialState, ISearchAction<T>[] actionPath, T terminalState)
+        public SearchSolution(T initialState, ITraversal<T>[] actionPath, T terminalState, double? cost = null)
         {
             InitialState = initialState;
             ActionPath = actionPath;
             TerminalState = terminalState;
+            Cost = cost;
         }
         public T InitialState { get; init; }
-        public ISearchAction<T>[] ActionPath { get; init; }
+        public ITraversal<T>[] ActionPath { get; init; }
         public T TerminalState { get; init; }
-    }
-
-    public class CostSearchSolution<T> : SearchSolution<T>, ICost
-    {
-        public CostSearchSolution(T initialState, ISearchAction<T>[] actionPath, T terminalState, double totalCost) : base(initialState, actionPath, terminalState)
-        {
-            _totalCost = totalCost;
-        }
-
-        private double _totalCost;
-        public double Cost => _totalCost;
+        public double? Cost { get; }
     }
 }

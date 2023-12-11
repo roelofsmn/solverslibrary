@@ -7,17 +7,12 @@ using System.Threading.Tasks;
 
 namespace SolversLibrary.Search
 {
-    public interface ISearchProblem<T> : IExploreFunction<T, ISearchAction<T>>
+    public interface IGoalDefinition<T>
     {
         bool IsTerminal(T state);
     }
 
-    public interface ICostSearchProblem<T> : IExploreFunction<T, ICostSearchAction<T>>
-    {
-        bool IsTerminal(T state);
-    }
-
-    public interface IHeuristicSearchProblem<T> : ICostSearchProblem<T>
+    public interface IHeuristic<T>
     {
         /// <summary>
         /// A heuristic cost from state to terminal state, which should be both admissible and consistent.

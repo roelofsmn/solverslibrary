@@ -6,25 +6,33 @@ using System.Threading.Tasks;
 
 namespace SolversLibrary.Search.Traversal
 {
-    public class PriorityTraversalStrategy<T> : ITraversalStrategy<T> where T : ICost
+    public delegate double ICostFunction<T>(T state);
+    public class PriorityTraversalStrategy<T> : ITraversalStrategy<T>
     {
         //private PriorityQueue<T, double> frontier; // TODO: use this instead of custom implementation...
         private SortedDictionary<double, LinkedList<T>> frontier; // Should we make it possible to use a stack as well???
+        private ICostFunction<T> _costFunction;
         private double minCost;
-        public PriorityTraversalStrategy()
+        private IEqualityComparer<T>? _equalityComparer;
+        public PriorityTraversalStrategy(
+            ICostFunction<T> costFunction,
+            IEqualityComparer<T>? equalityComparer = null)
         {
             frontier = new SortedDictionary<double, LinkedList<T>>();
+            _costFunction = costFunction;
             minCost = double.PositiveInfinity;
+            _equalityComparer = equalityComparer;
         }
         public void AddCandidateState(T state)
         {
-            if (frontier.ContainsKey(state.Cost))
-                frontier[state.Cost].AddFirst(state);
+            var cost = _costFunction(state);
+            if (frontier.ContainsKey(cost))
+                frontier[cost].AddFirst(state);
             else
             {
-                frontier.Add(state.Cost, new LinkedList<T>(new T[] { state }));
-                if (state.Cost < minCost)
-                    minCost = state.Cost;
+                frontier.Add(cost, new LinkedList<T>(new T[] { state }));
+                if (cost < minCost)
+                    minCost = cost;
             }
         }
 
@@ -35,7 +43,8 @@ namespace SolversLibrary.Search.Traversal
 
         public bool Contains(T state)
         {
-            return frontier.ContainsKey(state.Cost) && frontier[state.Cost].Contains(state);
+            var cost = _costFunction(state);
+            return frontier.ContainsKey(cost) && frontier[cost].Contains(state, _equalityComparer);
         }
 
         public bool ContainsCandidates()
@@ -62,17 +71,18 @@ namespace SolversLibrary.Search.Traversal
 
         public void ReplaceCandidateState(T current, T replacement)
         {
-            if (frontier[current.Cost].Count == 1)
-                frontier.Remove(current.Cost);
+            var cost = _costFunction(current);
+            if (frontier[cost].Count == 1)
+                frontier.Remove(cost);
             else
-                frontier[current.Cost].Remove(current);
+                frontier[cost].Remove(current);
 
             AddCandidateState(replacement);
         }
 
-        public T? Find(T state, IEqualityComparer<T> comparer)
+        public T? Find(T state)
         {
-            return frontier.Values.SelectMany(list => list).SingleOrDefault(t => comparer.Equals(state, t));
+            return frontier.Values.SelectMany(list => list).SingleOrDefault(t => _equalityComparer?.Equals(state, t) ?? t.Equals(state));
         }
     }
 }

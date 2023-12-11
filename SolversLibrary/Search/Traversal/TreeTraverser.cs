@@ -5,7 +5,7 @@ namespace SolversLibrary.Search.Traversal
 {
     public class TreeTraverser<T> : ITraverser<T>
     {
-        private readonly IExploreFunction<T, T> branchingFunction;
+        private readonly IBranchingFunction<T> branchingFunction;
         private readonly ITraversalStrategy<T> strategy;
 
         /// <summary>
@@ -16,7 +16,7 @@ namespace SolversLibrary.Search.Traversal
         /// <exception cref="ArgumentNullException"></exception>
         /// <remarks>We could have used an enum for the strategy, and a factory to create a new strategy object on every Traverse call. Instead, we opted for the Clear() method on the strategy interface, because this reuses the same object (hence less GC).</remarks>
         public TreeTraverser(
-            IExploreFunction<T, T> generator,
+            IBranchingFunction<T> generator,
             ITraversalStrategy<T> strategy)
         {
             this.branchingFunction = generator ?? throw new ArgumentNullException(nameof(generator));
@@ -34,8 +34,8 @@ namespace SolversLibrary.Search.Traversal
                 T node = strategy.NextState();
                 yield return node;
                
-                foreach (var child in branchingFunction.Branch(node))
-                    strategy.AddCandidateState(child);
+                foreach (var traversal in branchingFunction.Branch(node))
+                    strategy.AddCandidateState(traversal.Traverse(node));
             }
         }
     }

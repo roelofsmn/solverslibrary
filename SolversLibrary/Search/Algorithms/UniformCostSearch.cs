@@ -1,4 +1,5 @@
 ﻿using MathNet.Numerics.Distributions;
+using SolversLibrary.Search.Factories;
 using SolversLibrary.Search.Traversal;
 using System;
 using System.Collections.Generic;
@@ -10,49 +11,56 @@ using System.Threading.Tasks;
 
 namespace SolversLibrary.Search.Algorithms
 {
-    public class UniformCostSearch<T> : ICostSearchAlgorithm<T>
+    public class UniformCostSearch<T> : ISearchAlgorithm<T>
     {
-        private PriorityTraversalStrategy<CostSearchNode<T>> strategy;
-        private HashSet<T> _explored;
-        private SearchNodeStateComparer<T> searchNodeComparer;
+        private PriorityTraversalStrategy<SearchNode<T>> _strategy;
+        private ITraverser<SearchNode<T>> _traverser;
 
-        public UniformCostSearch(IEqualityComparer<T>? stateEquality = null)
+        public UniformCostSearch(
+            Traversers traverseType,
+            IBranchingFunction<T> branchingFunction,
+            IEqualityComparer<T>? stateEquality = null) 
+            : this(traverseType, branchingFunction, x => x.Cost, stateEquality)
         {
-            strategy = new PriorityTraversalStrategy<CostSearchNode<T>>();
-            _explored = new HashSet<T>(stateEquality);
-            searchNodeComparer = new SearchNodeStateComparer<T>();
         }
-        public CostSearchSolution<T> Search(ICostSearchProblem<T> problemStatement, T initialState)
+
+        internal UniformCostSearch(
+            Traversers traverseType,
+            IBranchingFunction<T> branchingFunction,
+            ICostFunction<SearchNode<T>> costFunction,
+            IEqualityComparer<T>? stateEquality = null)
         {
-            strategy.Clear();
-            _explored.Clear();
+            var searchNodeComparer = new SearchNodeStateComparer<T>(stateEquality);
 
-            if (problemStatement.IsTerminal(initialState))
-                return new CostSearchSolution<T>(initialState, Array.Empty<ISearchAction<T>>(), initialState, 0.0);
+            _strategy = new PriorityTraversalStrategy<SearchNode<T>>(
+                costFunction,
+                searchNodeComparer);
 
-            strategy.AddCandidateState(new CostSearchNode<T>(initialState, null, null, 0.0));
+            _traverser = TraverserFactory.Create<SearchNode<T>>(
+                traverseType,
+                new SearchNodeBranchingFunction<T>(branchingFunction),
+                _strategy,
+                searchNodeComparer);
+        }
+    public SearchSolution<T> Search(IGoalDefinition<T> goal, T initialState)
+        {
+            if (goal.IsTerminal(initialState))
+                return new SearchSolution<T>(initialState, Array.Empty<ITraversal<T>>(), initialState, 0.0);
 
-            while (strategy.ContainsCandidates())
+            foreach (var node in _traverser.Traverse(new SearchNode<T>(initialState, null, null, 0.0)))
             {
-                CostSearchNode<T> node = strategy.NextState();
-                if (problemStatement.IsTerminal(node.State))
-                    return new CostSearchSolution<T>(
+                if (goal.IsTerminal(node.State))
+                    return new SearchSolution<T>(
                         initialState,
                         node.GetActionsToNode(),
                         node.State,
                         node.Cost);
 
-                _explored.Add(node.State);
-                foreach (var action in problemStatement.Branch(node.State))
+                if (_strategy.Contains(node))
                 {
-                    var childState = action.Apply(node.State);
-                    var actionCost = action.Cost(node.State);
-                    var child = new CostSearchNode<T>(childState, node, action, node.Cost + actionCost);
-                    CostSearchNode<T>? matchingSearchNode = strategy.Find(child, searchNodeComparer);
-                    if (!_explored.Contains(childState) && matchingSearchNode == null)
-                        strategy.AddCandidateState(child);
-                    else if (matchingSearchNode != null && matchingSearchNode.Cost > child.Cost)
-                        strategy.ReplaceCandidateState(matchingSearchNode, child);
+                    var match = _strategy.Find(node)!;
+                    if (match.Cost > node.Cost)
+                        _strategy.ReplaceCandidateState(match, node);
                 }
             }
             throw new NoSolutionFoundException();

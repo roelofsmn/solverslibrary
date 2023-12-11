@@ -8,16 +8,6 @@ namespace SolversLibrary.Search
 {
     internal interface ISearchAlgorithm<T>
     {
-        SearchSolution<T> Search(ISearchProblem<T> problemStatement, T initialState);
+        SearchSolution<T> Search(IGoalDefinition<T> problemStatement, T initialState);
     }
-
-    internal interface ICostSearchAlgorithm<T>
-    {
-        CostSearchSolution<T> Search(ICostSearchProblem<T> problemStatement, T initialState);
-    }
-    internal interface IHeuristicSearchAlgorithm<T>
-    {
-        CostSearchSolution<T> Search(IHeuristicSearchProblem<T> problemStatement, T initialState);
-    }
-
 }

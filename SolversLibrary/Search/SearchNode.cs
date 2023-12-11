@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SolversLibrary.Search.Traversal;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -9,39 +10,35 @@ namespace SolversLibrary.Search
 {
     public class SearchNode<T>
     {
-        public SearchNode(T state, SearchNode<T>? parent, ISearchAction<T>? action)
+        public SearchNode(T state, SearchNode<T>? parent, ITraversal<T>? action, double? cost = null)
         {
             State = state;
             Parent = parent;
             Action = action;
+            _cost = cost;
         }
         internal T State { get; init; }
         internal SearchNode<T>? Parent { get; init; }
-
-        internal ISearchAction<T>? Action { get; init; }
+        internal ITraversal<T>? Action { get; init; }
+        private double? _cost;
+        public double Cost => _cost ?? double.NaN;
     }
 
-    public class CostSearchNode<T> : SearchNode<T>, ICost
+    internal class SearchNodeStateComparer<T> : IEqualityComparer<SearchNode<T>>
     {
-        public CostSearchNode(T state, SearchNode<T>? parent, ISearchAction<T>? action, double cost) : base(state, parent, action)
+        private IEqualityComparer<T>? stateEqualityComparer;
+        internal SearchNodeStateComparer(IEqualityComparer<T>? stateEquality = null)
         {
-            _cost = cost;
+            stateEqualityComparer = stateEquality;
         }
-
-        private double _cost;
-        public double Cost => _cost;
-    }
-
-    internal class SearchNodeStateComparer<T> : IEqualityComparer<CostSearchNode<T>>
-    {
-        public bool Equals(CostSearchNode<T>? x, CostSearchNode<T>? y)
+        public bool Equals(SearchNode<T>? x, SearchNode<T>? y)
         {
             if (ReferenceEquals(x, null) || ReferenceEquals(y, null) || ReferenceEquals(x.State, null))
                 return false;
-            return x.State.Equals(y.State);
+            return stateEqualityComparer?.Equals(x.State, y.State) ?? x.State.Equals(y.State);
         }
 
-        public int GetHashCode([DisallowNull] CostSearchNode<T> obj)
+        public int GetHashCode([DisallowNull] SearchNode<T> obj)
         {
             return obj.GetHashCode();
         }
