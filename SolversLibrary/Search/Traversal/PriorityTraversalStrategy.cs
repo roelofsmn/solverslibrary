@@ -8,6 +8,7 @@ namespace SolversLibrary.Search.Traversal
 {
     public class PriorityTraversalStrategy<T> : ITraversalStrategy<T> where T : ICost
     {
+        //private PriorityQueue<T, double> frontier; // TODO: use this instead of custom implementation...
         private SortedDictionary<double, LinkedList<T>> frontier; // Should we make it possible to use a stack as well???
         private double minCost;
         public PriorityTraversalStrategy()
@@ -18,7 +19,7 @@ namespace SolversLibrary.Search.Traversal
         public void AddCandidateState(T state)
         {
             if (frontier.ContainsKey(state.Cost))
-                frontier[state.Cost].AddLast(state);
+                frontier[state.Cost].AddFirst(state);
             else
             {
                 frontier.Add(state.Cost, new LinkedList<T>(new T[] { state }));
