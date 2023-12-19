@@ -5,6 +5,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using MathNet.Numerics.LinearAlgebra.Complex;
+using System.ComponentModel;
 
 namespace SolversLibrary.Optimization
 {
@@ -22,7 +23,7 @@ namespace SolversLibrary.Optimization
         /// <param name="Aeq">Equality constraint LHS</param>
         /// <param name="beq">Equality constraint RHS</param>
         /// <returns></returns>
-        public static double[][] Solve(double[,] A, double[] b, double[] c, double[] x0 = null, double[,] Aeq = null, double[] beq = null)
+        public static double[][] Solve(double[,] A, double[] b, double[] c, double[]? x0 = null, double[,]? Aeq = null, double[]? beq = null)
         {
             bool hasEqConstraint = Aeq != null;
             if (Aeq == null)
@@ -73,8 +74,12 @@ namespace SolversLibrary.Optimization
                 // indices that represent an equality constraint may not be removed
                 var searchDir = ArgMax(search.ToArray(), activeConstraints.Select(ac => ineqConstraints.Contains(ac)).ToArray());
 
-                if (search[searchDir] < 0)
+                var openEqConstraints = eqConstraints.Except(activeConstraints).ToArray();
+
+                if (search[searchDir] < 0) // No more improvement can be made
                 {
+                    if (openEqConstraints.Any())
+                        throw new InfeasibleProblemException();
                     solutions.Add(curSol);
                     break;
                 }
@@ -84,7 +89,7 @@ namespace SolversLibrary.Optimization
 
                 // Until update current point: find entering variable
                 // First add equality constraints to active set
-                var openEqConstraints = eqConstraints.Except(activeConstraints).ToArray();
+                
                 if (openEqConstraints.Any())
                 {
                     j = openEqConstraints[0];
@@ -92,8 +97,8 @@ namespace SolversLibrary.Optimization
                     alpha = (Atotal.Row(j) * curSol - beq[b_index]) / (Atotal.Row(j) * D.Column(searchDir));
                 }
                 // If all equality constraints in solution, find an inequality constraint
-                else
-                {
+                //else
+                //{
                     foreach (var openConstraint in ineqConstraints.Except(activeConstraints))
                     {
                         var ad = Amat.Row(openConstraint) * D.Column(searchDir);
@@ -112,7 +117,7 @@ namespace SolversLibrary.Optimization
                         solutions.Add(curSol);
                         break;
                     }
-                }
+                //}
                 activeConstraints[searchDir] = j;
 
                 // Already add current (i.e. previous) solution to solutions.
@@ -195,7 +200,7 @@ namespace SolversLibrary.Optimization
                 }
             }
             else
-                throw new InvalidOperationException();
+                throw new InfeasibleProblemException();
         }
         private static bool NextCombination(IList<int> num, int n, int k)
         {
@@ -276,5 +281,15 @@ namespace SolversLibrary.Optimization
 
             return output;
         }
+
+        public static double ComputeObjective(double[] cost, double[] x)
+        {
+            return cost.Zip(x).Select(t => t.First * t.Second).Sum();
+        }
+    }
+
+    public class InfeasibleProblemException : Exception
+    {
+
     }
 }

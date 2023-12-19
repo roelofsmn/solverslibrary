@@ -281,5 +281,95 @@ namespace Tests
                 Assert.Equal(x_actual[i], x_optimal[i], 2, MidpointRounding.AwayFromZero);
             }
         }
+
+        [Fact]
+        public void SolveProblem85MDO()
+        {
+            double[] c = new double[] { -1, -2, -3, -1.5 };
+            double[,] A = new double[,]
+            {
+                { 1, 1, 2, 2 },
+                { -1, 0, 0, 0 },
+                { 0, -1, 0, 0 },
+                { 0, 0, -1, 0 },
+                { 0, 0, 0, -1 },
+            };
+            double[] b = new double[] { 10, 0, 0, 0, 0 };
+
+            double[,] Aeq = new double[,]
+            {
+                { 7, 8, 5, 1 }
+            };
+            double[] beq = new double[] { 31.5 };
+
+            // Act
+            var solution = LinearProgramming.Solve(A, b, c, null, Aeq, beq)[0];
+            var objVal = LinearProgramming.ComputeObjective(c, solution);
+
+            // Assert
+            var expected = new double[] { 0, 1.1818, 4.4091, 0 };
+            for (int i = 0; i < expected.Length; i++)
+            {
+                Assert.Equal(expected[i], solution[i], 4, MidpointRounding.AwayFromZero);
+            }
+            Assert.Equal(-15.59, objVal, 2, MidpointRounding.AwayFromZero);
+        }
+        [Fact]
+        public void SolveProblem85MDOStep2()
+        {
+            double[] c = new double[] { -1, -2, -3, -1.5 };
+            double[,] A = new double[,]
+            {
+                { 1, 1, 2, 2 },
+                { -1, 0, 0, 0 },
+                { 0, -1, 0, 0 },
+                { 0, 0, -1, 0 },
+                { 0, 0, 0, -1 },
+                { 0, 0, 1, 0 }
+            };
+            double[] b = new double[] { 10, 0, 0, 0, 0, 4 };
+
+            double[,] Aeq = new double[,]
+            {
+                { 7, 8, 5, 1 }
+            };
+            double[] beq = new double[] { 31.5 };
+
+            // Act
+            var solution = LinearProgramming.Solve(A, b, c, null, Aeq, beq)[0];
+            var objVal = LinearProgramming.ComputeObjective(c, solution);
+
+            // Assert
+            var expected = new double[] { 0, 1.4, 4, 0.3 };
+            for (int i = 0; i < expected.Length; i++)
+            {
+                Assert.Equal(expected[i], solution[i], 4, MidpointRounding.AwayFromZero);
+            }
+            Assert.Equal(-15.25, objVal, 2, MidpointRounding.AwayFromZero);
+        }
+        [Fact]
+        public void SolveProblem85MDOStep3_Infeasible()
+        {
+            double[] c = new double[] { -1, -2, -3, -1.5 };
+            double[,] A = new double[,]
+            {
+                { 1, 1, 2, 2 },
+                { -1, 0, 0, 0 },
+                { 0, -1, 0, 0 },
+                { 0, 0, -1, 0 },
+                { 0, 0, 0, -1 },
+                { 0, 0, -1, 0 }
+            };
+            double[] b = new double[] { 10, 0, 0, 0, 0, -5 };
+
+            double[,] Aeq = new double[,]
+            {
+                { 7, 8, 5, 1 }
+            };
+            double[] beq = new double[] { 31.5 };
+
+            // Act & Assert
+            Assert.Throws<InfeasibleProblemException>(() => LinearProgramming.Solve(A, b, c, null, Aeq, beq));
+        }
     }
 }
