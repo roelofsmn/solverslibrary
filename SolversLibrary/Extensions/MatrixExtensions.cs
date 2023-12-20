@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MathNet.Numerics.LinearAlgebra;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -57,5 +58,50 @@ namespace Solvers.Extensions
             }
             return result;
         }
+
+        public static T[] GetRow<T>(this T[,] array, int row)
+        {
+            var N = array.GetLength(1);
+            var output = new T[N];
+            for (int j = 0; j < N; j++)
+                output[j] = array[row, j];
+
+            return output;
+        }
+        public static T[] GetColumn<T>(this T[,] array, int column)
+        {
+            var N = array.GetLength(0);
+            var output = new T[N];
+            for (int j = 0; j < N; j++)
+                output[j] = array[j, column];
+
+            return output;
+        }
+
+        public static Vector<double> InsertAt(this Vector<double> vector, int index, double value)
+        {
+            double[] newValues = new double[vector.Count + 1];
+            for (int i = 0; i < vector.Count; i++) // Copy current elements
+            {
+                int offset = i < index ? 0 : 1;
+                newValues[i + offset] = vector[i];
+            }
+            newValues[index] = value;
+            return Vector<double>.Build.DenseOfArray(newValues);
+        }
+        public static Vector<double> RemoveAt(this Vector<double> vector, int element)
+        {
+            double[] newValues = new double[vector.Count - 1];
+            for (int i = 0; i < vector.Count; i++)
+            {
+                if (i == element)
+                    continue;
+                int offset = i < element ? 0 : 1;
+                newValues[i - offset] = vector[i];
+            }
+            return Vector<double>.Build.DenseOfArray(newValues);
+        }
+
+
     }
 }
