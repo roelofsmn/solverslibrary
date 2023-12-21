@@ -59,6 +59,13 @@ namespace SolversLibrary.Optimization
         }
 
         private Stack<(int variableIndex, Vector<double> equalityCoefficients, double RHS)> _substitutionEquations = new Stack<(int, Vector<double>, double)>();
+        
+        /// <summary>
+        /// Removes equality constraints from the problem, and rewrites the inequality constraints and cost vector accordingly.
+        /// This process removes variables from the problem.
+        /// Those substitutions are stored in a stack, so they can be replayed on a solution for the reduced problem, 
+        /// to translate the solution into the original space <see cref="SubstituteBackOriginalVariables(double[])"/>.
+        /// </summary>
         public void RemoveEqualityConstraints()
         {
             if (_processedEqualityConstraints) return;
@@ -67,19 +74,25 @@ namespace SolversLibrary.Optimization
             {
                 var remainingEqualityConstraints = Matrix<double>.Build.DenseOfArray(_equalityMatrix);
                 var remainingEqualityVector = Vector<double>.Build.DenseOfArray(_equalityVector);
+                // Process each equality constraint
                 for (int equalityConstraint = 0; equalityConstraint < _equalityMatrix.GetLength(0); equalityConstraint++)
                 {
                     var currentConstraint = remainingEqualityConstraints.Row(equalityConstraint);
                     var RHS = remainingEqualityVector[equalityConstraint];
+                    // just pick the first variable that appears in the constraint (i.e. has nonzero coefficient)
                     int variableToSubstitute = currentConstraint.Find(val => val != 0.0).Item1;
 
+                    // substitute variable in inequalities
                     _inequalityMatrix = ApplyEqualityConstraint(_inequalityMatrix, _inequalityVector, currentConstraint, RHS, variableToSubstitute);
+                    // substitute variable in remaining equality equations
                     remainingEqualityConstraints = ApplyEqualityConstraint(remainingEqualityConstraints, remainingEqualityVector, currentConstraint, RHS, variableToSubstitute);
 
+                    // substitute variable in cost
                     var multCost = _costVector[variableToSubstitute] / currentConstraint[variableToSubstitute];
                     _costVector -= multCost * currentConstraint;
                     _costVector = _costVector.RemoveAt(variableToSubstitute);
 
+                    // store the substitution for later
                     _substitutionEquations.Push(
                         (variableToSubstitute,
                         currentConstraint,
@@ -91,14 +104,28 @@ namespace SolversLibrary.Optimization
             _processedEqualityConstraints = true;
         }
 
+        /// <summary>
+        /// Substitute back removed variables from original problem into final solution.
+        /// </summary>
+        /// <param name="finalSolution">The final solution of the reduced problem.</param>
+        /// <returns>The full solution to the original problem.</returns>
         public double[] SubstituteBackOriginalVariables(double[] finalSolution)
         {
             return SubstituteBackOriginalVariables(finalSolution, _substitutionEquations);
         }
 
+        /// <summary>
+        /// Substitute back removed variables from original problem into final solution.
+        /// For example, the final solution is [x2=5, x3=9], but we subsituted an original x1 through x1 + 3 x2 + 4 x3 = 9.
+        /// Then the original full solution would be [x1=-42, x2=5, x3=9].
+        /// </summary>
+        /// <param name="finalSolution">The final solution of the reduced problem.</param>
+        /// <param name="substitutions">The substitution equations for the original variables.</param>
+        /// <returns>The full solution to the original problem.</returns>
         public static double[] SubstituteBackOriginalVariables(double[] finalSolution, Stack<(int variableIndex, Vector<double> equalityCoefficients, double RHS)> substitutions)
         {
             Vector<double> solution = Vector<double>.Build.DenseOfArray(finalSolution);
+            // work through substitutions in backwards order
             while (substitutions.Count > 0)
             {
                 var substitution = substitutions.Pop();
@@ -326,6 +353,7 @@ namespace SolversLibrary.Optimization
                 return completeSol;
             }
         }
+
 
         public bool IsSolutionFeasible(double[] x)
         {
