@@ -47,7 +47,7 @@ namespace SolversLibrary.Search.Algorithms
         {
             _branchingFunction = branchingFunction;
         }
-        public IEnumerable<ITraversal<SearchNode<T>>> Branch(SearchNode<T> current)
+        public virtual IEnumerable<ITraversal<SearchNode<T>>> Branch(SearchNode<T> current)
         {
             foreach (var traversal in _branchingFunction.Branch(current.State))
                 yield return new SearchTraversal<T>(traversal);
@@ -69,7 +69,10 @@ namespace SolversLibrary.Search.Algorithms
 
         public SearchNode<T> Traverse(SearchNode<T> state)
         {
-            return new SearchNode<T>(_stateTraversal.Traverse(state.State), state, _stateTraversal, state.Cost + _stateTraversal.Cost(state.State) ?? double.NaN);
+            return new SearchNode<T>(
+                _stateTraversal.Traverse(state.State), 
+                state, _stateTraversal, 
+                state.Cost + _stateTraversal.Cost(state.State) ?? double.NaN);
         }
     }
 }
