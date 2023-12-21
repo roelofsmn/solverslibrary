@@ -9,8 +9,10 @@ namespace SolversLibrary.Optimization
 {
     public class LinearMixedIntegerProgramming
     {
-        private readonly double[,] inequalityMatrix, equalityMatrix;
-        private readonly double[] inequalityVector, equalityVector;
+        private readonly double[,] inequalityMatrix;
+        private readonly double[,]? equalityMatrix;
+        private readonly double[] inequalityVector;
+        private readonly double[]? equalityVector;
         private readonly double[] cost;
         private readonly int[] integerIndices;
 
