@@ -41,7 +41,7 @@ namespace SolversLibrary.Optimization
         public double[] Solve(TraversalStrategies strategyType)
         {
             var strategy = TraversalStrategyFactory.Create<MixedIntegerProblemState>(strategyType);
-            var branchingFunction = new IntegerBranching(integerIndices);
+            var branchingFunction = new MixedIntegerBranching(integerIndices);
             var goal = new MixedIntegerGoal(integerIndices);
 
             var root = new MixedIntegerProblemState(
@@ -186,14 +186,14 @@ namespace SolversLibrary.Optimization
         }
     }
 
-    internal class IntegerBranching : IBranchingFunction<MixedIntegerProblemState>
+    internal class MixedIntegerBranching : IBranchingFunction<MixedIntegerProblemState>
     {
         private readonly int[] integerIndices;
         /// <summary>
         /// Construct a branching mechanism for linear mixed-integer programming problems.
         /// </summary>
         /// <param name="integerIndices">The indices of the solution vector that have to have integer values.</param>
-        internal IntegerBranching(int[] integerIndices)
+        internal MixedIntegerBranching(int[] integerIndices)
         {
             this.integerIndices = integerIndices;
         }
