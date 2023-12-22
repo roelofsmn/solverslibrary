@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace SolversLibrary.Search
 {
-    internal interface ISearchAlgorithm<T> : IAlgorithm<SearchSolution<T>>
+    public interface ISearchAlgorithm<T> : IAlgorithm<SearchSolution<T>>
     {
         SearchSolution<T> Search(IGoalDefinition<T> problemStatement, T initialState);
 
