@@ -8,6 +8,10 @@ using System.Threading.Tasks;
 
 namespace SolversLibrary.Search
 {
+    /// <summary>
+    /// A node on a search path, that holds a state and from which parent--action pair it was generated.
+    /// </summary>
+    /// <typeparam name="T">The type of state for the search.</typeparam>
     public class SearchNode<T>
     {
         public SearchNode(T state, SearchNode<T>? parent, ITraversal<T>? action, double? cost = null)
@@ -17,10 +21,25 @@ namespace SolversLibrary.Search
             Action = action;
             _cost = cost;
         }
+        /// <summary>
+        /// The actual state represented by this point in the search path.
+        /// </summary>
         internal T State { get; init; }
+
+        /// <summary>
+        /// The parent search node from which this node was generated.
+        /// </summary>
         internal SearchNode<T>? Parent { get; init; }
+
+        /// <summary>
+        /// The action applied to the previous state to arrive at this one.
+        /// </summary>
         internal ITraversal<T>? Action { get; init; }
+
         private double? _cost;
+        /// <summary>
+        /// The cost associated with this state at this point in the search.
+        /// </summary>
         public double Cost => _cost ?? double.NaN;
     }
 
