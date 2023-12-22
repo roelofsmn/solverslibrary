@@ -6,16 +6,32 @@ using System.Threading.Tasks;
 
 namespace SolversLibrary.Search.Traversal
 {
-    public delegate double ICostFunction<T>(T state);
+    /// <summary>
+    /// Cost function gives a cost based on current state, e.g. a heuristic cost to the goal.
+    /// </summary>
+    /// <typeparam name="T">Type of state.</typeparam>
+    /// <param name="state">The state to evaluate the cost for.</param>
+    /// <returns>(Estimated) Cost of state.</returns>
+    public delegate double CostFunction<T>(T state);
+
+    /// <summary>
+    /// Cost of state resulting from applying an action to a state.
+    /// </summary>
+    /// <typeparam name="T">Type of state.</typeparam>
+    /// <param name="state">The state on which the action is applied.</param>
+    /// <param name="action">The action applied.</param>
+    /// <returns>Cost of the state resulting from applying action to state.</returns>
+    public delegate double ActionCostFunction<T>(T state, ITraversal<T> action);
+
     public class PriorityTraversalStrategy<T> : ITraversalStrategy<T>
     {
         //private PriorityQueue<T, double> frontier; // TODO: use this instead of custom implementation...
         private SortedDictionary<double, LinkedList<T>> frontier; // Should we make it possible to use a stack as well???
-        private ICostFunction<T> _costFunction;
+        private CostFunction<T> _costFunction;
         private double minCost;
         private IEqualityComparer<T>? _equalityComparer;
         public PriorityTraversalStrategy(
-            ICostFunction<T> costFunction,
+            CostFunction<T> costFunction,
             IEqualityComparer<T>? equalityComparer = null)
         {
             frontier = new SortedDictionary<double, LinkedList<T>>();

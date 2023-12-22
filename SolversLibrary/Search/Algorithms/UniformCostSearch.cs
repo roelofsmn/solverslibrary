@@ -19,7 +19,7 @@ namespace SolversLibrary.Search.Algorithms
         public UniformCostSearch(
             Traversers traverseType,
             IBranchingFunction<T> branchingFunction,
-            IEqualityComparer<T>? stateEquality = null) 
+            IEqualityComparer<T>? stateEquality = null)
             : this(traverseType, branchingFunction, x => x.Cost, stateEquality)
         {
         }
@@ -27,7 +27,7 @@ namespace SolversLibrary.Search.Algorithms
         internal UniformCostSearch(
             Traversers traverseType,
             IBranchingFunction<T> branchingFunction,
-            ICostFunction<SearchNode<T>> costFunction,
+            CostFunction<SearchNode<T>> costFunction,
             IEqualityComparer<T>? stateEquality = null)
         {
             var searchNodeComparer = new SearchNodeStateComparer<T>(stateEquality);
@@ -38,11 +38,25 @@ namespace SolversLibrary.Search.Algorithms
 
             _traverser = TraverserFactory.Create<SearchNode<T>>(
                 traverseType,
-                new SearchNodeBranchingFunction<T>(branchingFunction),
+                new SearchNodeBranchingFunction<T>(branchingFunction,
+                    (parentState, parentCost, traversal) => parentCost + traversal.Cost(parentState) ?? double.NaN),
                 _strategy,
                 searchNodeComparer);
         }
-    public SearchSolution<T> Search(IGoalDefinition<T> goal, T initialState)
+
+        public IGoalDefinition<T> Goal { get; set; }
+        public T InitialState { get; set; }
+
+        public event Action<SearchSolution<T>>? ProgressUpdated;
+
+        public SearchSolution<T> Run()
+        {
+            if (Goal == null || InitialState == null)
+                throw new ArgumentNullException();
+            return Search(Goal, InitialState);
+        }
+
+        public SearchSolution<T> Search(IGoalDefinition<T> goal, T initialState)
         {
             if (goal.IsTerminal(initialState))
                 return new SearchSolution<T>(initialState, Array.Empty<ITraversal<T>>(), initialState, 0.0);
@@ -62,6 +76,12 @@ namespace SolversLibrary.Search.Algorithms
                     if (match.Cost > node.Cost)
                         _strategy.ReplaceCandidateState(match, node);
                 }
+
+                ProgressUpdated?.Invoke(new SearchSolution<T>(
+                    initialState,
+                    node.GetActionsToNode(),
+                    node.State,
+                    node.Cost));
             }
             throw new NoSolutionFoundException();
         }

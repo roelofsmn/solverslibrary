@@ -11,6 +11,7 @@ namespace SolversLibrary.Search.Algorithms
 {
     public class BranchAndBound<T> : ISearchAlgorithm<T>
     {
+        private readonly Func<T, double, ITraversal<T>, double> newStateCost;
         private ITraverser<SearchNode<T>> _traverser;
 
         private SearchSolution<T>? bestSolution;
@@ -20,25 +21,47 @@ namespace SolversLibrary.Search.Algorithms
             Traversers traversalType,
             TraversalStrategies traverseStrategy,
             IBranchingFunction<T> branchingFunction,
+            Func<T, double, ITraversal<T>, double> newStateCost,
             IEqualityComparer<T>? stateEquality = null)
         {
             var strategy = TraversalStrategyFactory.Create<SearchNode<T>>(traverseStrategy);
             branching = new BoundingBranchingFunction<T>(
-                branchingFunction);
+                branchingFunction,
+                newStateCost);
             _traverser = TraverserFactory.Create<SearchNode<T>>(
                 traversalType,
                 branching,
                 strategy,
                 new SearchNodeStateComparer<T>(stateEquality));
+            this.newStateCost = newStateCost;
         }
+
+        public IGoalDefinition<T> Goal { get; set; }
+        public T InitialState { get; set; }
+
+        public event Action<SearchSolution<T>>? ProgressUpdated;
+
+        public SearchSolution<T> Run()
+        {
+            if (Goal == null || InitialState == null)
+                throw new ArgumentNullException();
+            return Search(Goal, InitialState);
+        }
+
         public SearchSolution<T> Search(IGoalDefinition<T> goal, T initialState)
         {
+            var rootCost = newStateCost(initialState, 0.0, null);
             if (goal.IsTerminal(initialState))
-                return new SearchSolution<T>(initialState, Array.Empty<ITraversal<T>>(), initialState, 0.0);
+                return new SearchSolution<T>(initialState, Array.Empty<ITraversal<T>>(), initialState, rootCost);
 
-            foreach (var node in _traverser.Traverse(new SearchNode<T>(initialState, null, null, 0.0)))
+            foreach (var node in _traverser.Traverse(new SearchNode<T>(initialState, null, null, rootCost)))
             {
-                //var fval = _cost(node.State);
+                ProgressUpdated?.Invoke(new SearchSolution<T>(
+                    initialState,
+                    node.GetActionsToNode(),
+                    node.State,
+                    node.Cost));
+
                 if (goal.IsTerminal(node.State) && node.Cost < branching.BestValue)
                 {
                     bestSolution = new SearchSolution<T>(
@@ -50,9 +73,6 @@ namespace SolversLibrary.Search.Algorithms
                     branching.BestValue = node.Cost;
                     continue;
                 }
-                //else if (fval > bestValue)
-                //    _traverser.
-                
             }
             if (bestSolution != null)
                 return bestSolution;
@@ -65,7 +85,8 @@ namespace SolversLibrary.Search.Algorithms
     {
         public double BestValue { get; set; } = double.PositiveInfinity;
         internal BoundingBranchingFunction(
-            IBranchingFunction<T> branchingFunction) : base(branchingFunction)
+            IBranchingFunction<T> branchingFunction,
+            Func<T, double, ITraversal<T>, double> newStateCost) : base(branchingFunction, newStateCost)
         {
         }
 

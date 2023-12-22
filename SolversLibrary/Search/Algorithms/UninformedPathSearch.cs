@@ -13,15 +13,29 @@ namespace SolversLibrary.Search.Algorithms
         public UninformedPathSearch(
             TraversalStrategies strategyType,
             Traversers traverseType,
-            IBranchingFunction<T> branchingFunction,            
+            IBranchingFunction<T> branchingFunction,
             IEqualityComparer<T>? stateEquality = null)
         {
             var strategy = TraversalStrategyFactory.Create<SearchNode<T>>(strategyType);
             _traverser = TraverserFactory.Create<SearchNode<T>>(traverseType,
-                new SearchNodeBranchingFunction<T>(branchingFunction),
+                new SearchNodeBranchingFunction<T>(branchingFunction,
+                    (parentState, parentCost, traversal) => parentCost + traversal.Cost(parentState) ?? double.NaN),
                 strategy,
                 new SearchNodeStateComparer<T>(stateEquality));
         }
+
+        public IGoalDefinition<T> Goal { get; set; }
+        public T InitialState { get; set; }
+
+        public event Action<SearchSolution<T>>? ProgressUpdated;
+
+        public SearchSolution<T> Run()
+        {
+            if (Goal == null || InitialState == null)
+                throw new ArgumentNullException();
+            return Search(Goal, InitialState);
+        }
+
         public SearchSolution<T> Search(IGoalDefinition<T> goal, T initialState)
         {
             if (goal.IsTerminal(initialState))
@@ -34,6 +48,12 @@ namespace SolversLibrary.Search.Algorithms
                         initialState,
                         node.GetActionsToNode(),
                         node.State);
+
+                ProgressUpdated?.Invoke(new SearchSolution<T>(
+                    initialState,
+                    node.GetActionsToNode(),
+                    node.State,
+                    node.Cost));
             }
 
             throw new NoSolutionFoundException();
@@ -43,23 +63,33 @@ namespace SolversLibrary.Search.Algorithms
     internal class SearchNodeBranchingFunction<T> : IBranchingFunction<SearchNode<T>>
     {
         private IBranchingFunction<T> _branchingFunction;
-        internal SearchNodeBranchingFunction(IBranchingFunction<T> branchingFunction)
+        private readonly Func<T, double, ITraversal<T>, double> _newStateCost;
+
+        internal SearchNodeBranchingFunction(
+            IBranchingFunction<T> branchingFunction,
+            Func<T, double, ITraversal<T>, double> newStateCost)
         {
             _branchingFunction = branchingFunction;
+            _newStateCost = newStateCost;
         }
         public virtual IEnumerable<ITraversal<SearchNode<T>>> Branch(SearchNode<T> current)
         {
             foreach (var traversal in _branchingFunction.Branch(current.State))
-                yield return new SearchTraversal<T>(traversal);
+                yield return new SearchTraversal<T>(traversal, _newStateCost);
         }
     }
 
     internal class SearchTraversal<T> : ITraversal<SearchNode<T>>
     {
         private ITraversal<T> _stateTraversal;
-        internal SearchTraversal(ITraversal<T> stateTraversal)
+        private readonly Func<T, double, ITraversal<T>, double> _newStateCost;
+
+        internal SearchTraversal(
+            ITraversal<T> stateTraversal,
+            Func<T, double, ITraversal<T>, double> newStateCost)
         {
             _stateTraversal = stateTraversal;
+            _newStateCost = newStateCost;
         }
 
         public double? Cost(SearchNode<T> state)
@@ -71,8 +101,8 @@ namespace SolversLibrary.Search.Algorithms
         {
             return new SearchNode<T>(
                 _stateTraversal.Traverse(state.State), 
-                state, _stateTraversal, 
-                state.Cost + _stateTraversal.Cost(state.State) ?? double.NaN);
+                state, _stateTraversal,
+                _newStateCost(state.State, state.Cost, _stateTraversal));
         }
     }
 }
