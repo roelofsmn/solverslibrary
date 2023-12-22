@@ -7,7 +7,7 @@ using System.Linq;
 
 namespace SolversLibrary.Optimization
 {
-    public class LinearMixedIntegerProgramming
+    public class LinearMixedIntegerProgramming : IAlgorithm<double[]>
     {
         private readonly double[,] inequalityMatrix;
         private readonly double[,]? equalityMatrix;
@@ -40,6 +40,8 @@ namespace SolversLibrary.Optimization
         private double[]? bestSolution;
         private double bestValue = double.PositiveInfinity;
 
+        public event Action<double[]>? ProgressUpdated;
+
         public double[] Solve(TraversalStrategies strategyType)
         {
             var strategy = TraversalStrategyFactory.Create<MixedIntegerProblemState>(strategyType);
@@ -63,6 +65,8 @@ namespace SolversLibrary.Optimization
 
                     currentProblem.x = currentSolution;
                     double fval = ComputeObjective(currentSolution);
+
+                    ProgressUpdated?.Invoke(currentSolution);
 
                     if (goal.IsTerminal(currentProblem) && fval < bestValue)
                     {
@@ -93,6 +97,11 @@ namespace SolversLibrary.Optimization
         public double ComputeObjective(double[] x)
         {
             return cost.Zip(x).Select(t => t.First * t.Second).Sum();
+        }
+
+        public double[] Run()
+        {
+            return Solve(TraversalStrategies.DepthFirst);
         }
     }
 

@@ -9,7 +9,7 @@ using Solvers.Extensions;
 
 namespace SolversLibrary.Optimization
 {
-    public class LinearProgramming
+    public class LinearProgramming : IAlgorithm<double[]>
     {
         private Matrix<double> _inequalityMatrix;
         private Vector<double> _inequalityVector;
@@ -59,7 +59,9 @@ namespace SolversLibrary.Optimization
         }
 
         private Stack<(int variableIndex, Vector<double> equalityCoefficients, double RHS)> _substitutionEquations = new Stack<(int, Vector<double>, double)>();
-        
+
+        public event Action<double[]>? ProgressUpdated;
+
         /// <summary>
         /// Removes equality constraints from the problem, and rewrites the inequality constraints and cost vector accordingly.
         /// This process removes variables from the problem.
@@ -211,6 +213,8 @@ namespace SolversLibrary.Optimization
 
             while (true)
             {
+                ProgressUpdated?.Invoke(curSol.ToArray());
+
                 var search = D.Transpose() * _costVector;
                 // get index of search direction d_s (leaving variable)
                 // indices that represent an equality constraint may not be removed
@@ -427,6 +431,11 @@ namespace SolversLibrary.Optimization
         public double ComputeObjective(double[] x)
         {
             return _originalCost.Zip(x).Select(t => t.First * t.Second).Sum();
+        }
+
+        public double[] Run()
+        {
+            return Solve()[0];
         }
     }
 
