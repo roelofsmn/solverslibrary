@@ -58,7 +58,7 @@ namespace SolversLibrary.Optimization
                 var currentProblem = strategy.NextState();
                 try
                 {
-                    var lp = new LinearProgramming(currentProblem.A, currentProblem.b, cost, equalityMatrix, equalityVector); // No more equality constraints. Already removed in initial problem...
+                    var lp = new LinearProgramming(currentProblem.A, currentProblem.b, cost, equalityMatrix, equalityVector);
                     var currentSolution = lp.Solve()[0];
 
                     currentProblem.x = currentSolution;
@@ -133,7 +133,7 @@ namespace SolversLibrary.Optimization
             MixedIntegerProblemState current,
             (int var, double val, bool lessThanOrEqual)? newInequalityConstraint = null)
         {
-            var newX = current.x;
+            var newX = new double[0];
 
             // Copy the b vector
             double[] newB;
@@ -144,7 +144,7 @@ namespace SolversLibrary.Optimization
             Buffer.BlockCopy(current.b, 0, newB, 0, current.b.Length * sizeof(double));
 
             // Copy the A matrix
-            double[,] newA = new double[newB.Length, newX.Length];
+            double[,] newA = new double[newB.Length, current.x.Length];
             Buffer.BlockCopy(current.A, 0, newA, 0, current.A.Length * sizeof(double));
 
             // Add constraint values if necessary
@@ -159,7 +159,7 @@ namespace SolversLibrary.Optimization
                 newA[newB.Length - 1, newInequalityConstraint.Value.var] = sign;
 
                 // Overwrite new solution vector to have valid value for constrained variable.
-                newX[newInequalityConstraint.Value.var] = newInequalityConstraint.Value.val;
+                //newX[newInequalityConstraint.Value.var] = newInequalityConstraint.Value.val;
             }
 
             return new MixedIntegerProblemState(
@@ -171,11 +171,13 @@ namespace SolversLibrary.Optimization
 
     internal struct MixedIntegerTraversal : ITraversal<MixedIntegerProblemState>
     {
-        private readonly MixedIntegerProblemState newState;
+        private readonly int _branchingVariable;
+        private readonly bool _floor;
 
-        internal MixedIntegerTraversal(MixedIntegerProblemState newState)
+        internal MixedIntegerTraversal(int branchingVariable, bool floor)
         {
-            this.newState = newState;
+            _branchingVariable = branchingVariable;
+            _floor = floor;
         }
         public double? Cost(MixedIntegerProblemState state)
         {
@@ -184,7 +186,12 @@ namespace SolversLibrary.Optimization
 
         public MixedIntegerProblemState Traverse(MixedIntegerProblemState state)
         {
-            return newState;
+            var variableValue = _floor ?
+                double.Floor(state.x[_branchingVariable])
+                : double.Ceiling(state.x[_branchingVariable]);
+            return MixedIntegerProblemState.CreateFrom(
+                    state,
+                    (_branchingVariable, variableValue, _floor));
         }
     }
 
@@ -215,17 +222,8 @@ namespace SolversLibrary.Optimization
             if (branchingVariable < 0) // invalid index
                 yield break;
 
-            var variableValue = state.x[branchingVariable];
-
-            yield return new MixedIntegerTraversal(
-                MixedIntegerProblemState.CreateFrom(
-                    state,
-                    (branchingVariable, double.Floor(variableValue), true)));
-
-            yield return new MixedIntegerTraversal(
-                MixedIntegerProblemState.CreateFrom(
-                    state,
-                    (branchingVariable, double.Ceiling(variableValue), false)));
+            yield return new MixedIntegerTraversal(branchingVariable, true);
+            yield return new MixedIntegerTraversal(branchingVariable, false);
         }
 
         /// <summary>
