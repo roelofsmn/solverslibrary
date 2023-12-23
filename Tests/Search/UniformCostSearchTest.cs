@@ -12,58 +12,97 @@ namespace Tests.Search
 {
     public class UniformCostSearchTest
     {
-        [Fact]
-        public void UniformCostSearch()
+        private readonly IGoalDefinition<string> problem;
+        private readonly ITraversal<string> action1;
+        private readonly ITraversal<string> action2;
+        private readonly ITraversal<string> action3;
+        private readonly ITraversal<string> action4;
+        private readonly ITraversal<string> action5;
+        private readonly IBranchingFunction<string> branching;
+        private readonly string initialState;
+        private List<SearchSolution<string>> searchStates;
+
+        public UniformCostSearchTest()
         {
-            // See section 3.4, page 85 of Artificial Intelligence: A Modern Approach, 3rd edition, S.J. Russell and P. Norvig
-            // Assign
-            var problem = Substitute.For<IGoalDefinition<string>>();
+            problem = Substitute.For<IGoalDefinition<string>>();
             problem.IsTerminal("sibiu").Returns(false);
             problem.IsTerminal("rimnicu").Returns(false);
             problem.IsTerminal("pitesti").Returns(false);
             problem.IsTerminal("fagaras").Returns(false);
             problem.IsTerminal("bucharest").Returns(true);
 
-            var action1 = Substitute.For<ITraversal<string>>();
+            action1 = Substitute.For<ITraversal<string>>();
             action1.Traverse("sibiu").Returns("fagaras");
             action1.Cost("sibiu").Returns(99);
 
-            var action2 = Substitute.For<ITraversal<string>>();
+            action2 = Substitute.For<ITraversal<string>>();
             action2.Traverse("sibiu").Returns("rimnicu");
             action2.Cost("sibiu").Returns(80);
 
-            var action3 = Substitute.For<ITraversal<string>>();
+            action3 = Substitute.For<ITraversal<string>>();
             action3.Traverse("fagaras").Returns("bucharest");
             action3.Cost("fagaras").Returns(211);
 
-            var action4 = Substitute.For<ITraversal<string>>();
+            action4 = Substitute.For<ITraversal<string>>();
             action4.Traverse("rimnicu").Returns("pitesti");
             action4.Cost("rimnicu").Returns(97);
 
-            var action5 = Substitute.For<ITraversal<string>>();
+            action5 = Substitute.For<ITraversal<string>>();
             action5.Traverse("pitesti").Returns("bucharest");
             action5.Cost("pitesti").Returns(101);
 
-            var branching = Substitute.For<IBranchingFunction<string>>();
+            branching = Substitute.For<IBranchingFunction<string>>();
             branching.Branch("sibiu").Returns(new ITraversal<string>[] { action1, action2 });
             branching.Branch("rimnicu").Returns(new ITraversal<string>[] { action4 });
             branching.Branch("pitesti").Returns(new ITraversal<string>[] { action5 });
             branching.Branch("fagaras").Returns(new ITraversal<string>[] { action3 });
 
-            var initialState = "sibiu";
+            initialState = "sibiu";
 
-            // Act
-            var bfs = new UniformCostSearch<string>(
+            searchStates = new List<SearchSolution<string>>();
+        }
+
+        private void Ucs_ProgressUpdated(SearchSolution<string> obj)
+        {
+            searchStates.Add(obj);
+        }
+
+        [Fact]
+        public void UniformCost_GraphSearch()
+        {
+            // See section 3.4, page 85 of Artificial Intelligence: A Modern Approach, 3rd edition, S.J. Russell and P. Norvig
+            // Assign
+            var ucs = new UniformCostSearch<string>(
                 SolversLibrary.Search.Factories.Traversers.Graph,
                 branching);
-            var result = bfs.Search(problem, initialState);
+            ucs.ProgressUpdated += Ucs_ProgressUpdated;
+
+            // Act
+            var result = ucs.Search(problem, initialState);
 
             // Assert
+            // Check final result
             Assert.Equal("sibiu", result.InitialState);
             Assert.Equal(new ITraversal<string>[] { action2, action4, action5 }, result.ActionPath);
             Assert.Equal(278, result.Cost);
             Assert.Equal("bucharest", result.TerminalState);
 
+            // Check search path
+            Assert.Equal(5, searchStates.Count);
+            Assert.Equal(new ITraversal<string>[] { }, searchStates[0].ActionPath);
+            Assert.Equal(0, searchStates[0].Cost);
+            Assert.Equal(new ITraversal<string>[] { action2 }, searchStates[1].ActionPath); // because it was added last
+            Assert.Equal(80, searchStates[1].Cost);
+            Assert.Equal(new ITraversal<string>[] { action1 }, searchStates[2].ActionPath); // because it has 0 cost, and previous search state has 80
+            Assert.Equal(99, searchStates[2].Cost);
+            // at this point, (action1, action3), arriving at bucharest, is added to the frontier, with cost 310
+            // but we first explore the lower cost path (action2)
+            Assert.Equal(new ITraversal<string>[] { action2, action4 }, searchStates[3].ActionPath);
+            Assert.Equal(177, searchStates[3].Cost);
+            // now, the path (action2, action4, action5) is added to the frontier, with a cost of 278, and is expanded next.
+            Assert.Equal(new ITraversal<string>[] { action2, action4, action5 }, searchStates[4].ActionPath); // arrives at bucharest
+            Assert.Equal(278, searchStates[4].Cost);
         }
+
     }
 }

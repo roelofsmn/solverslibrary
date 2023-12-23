@@ -63,6 +63,12 @@ namespace SolversLibrary.Search.Algorithms
 
             foreach (var node in _traverser.Traverse(new SearchNode<T>(initialState, null, null, 0.0)))
             {
+                ProgressUpdated?.Invoke(new SearchSolution<T>(
+                    initialState,
+                    node.GetActionsToNode(),
+                    node.State,
+                    node.Cost));
+
                 if (goal.IsTerminal(node.State))
                     return new SearchSolution<T>(
                         initialState,
@@ -76,12 +82,6 @@ namespace SolversLibrary.Search.Algorithms
                     if (match.Cost > node.Cost)
                         _strategy.ReplaceCandidateState(match, node);
                 }
-
-                ProgressUpdated?.Invoke(new SearchSolution<T>(
-                    initialState,
-                    node.GetActionsToNode(),
-                    node.State,
-                    node.Cost));
             }
             throw new NoSolutionFoundException();
         }

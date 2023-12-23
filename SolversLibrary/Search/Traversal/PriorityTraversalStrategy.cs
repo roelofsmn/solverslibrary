@@ -43,7 +43,7 @@ namespace SolversLibrary.Search.Traversal
         {
             var cost = _costFunction(state);
             if (frontier.ContainsKey(cost))
-                frontier[cost].AddFirst(state);
+                frontier[cost].AddFirst(state); // frontier acts like last in first out stack (depth first)
             else
             {
                 frontier.Add(cost, new LinkedList<T>(new T[] { state }));
@@ -79,7 +79,7 @@ namespace SolversLibrary.Search.Traversal
             }
             else if (minStates.Count > 1)
             {
-                return minStates.First!.Value;
+                return minStates.First!.Value; // frontier acts like last in first out stack (depth first)
             }
             else
                 throw new InvalidOperationException();
