@@ -43,17 +43,17 @@ namespace SolversLibrary.Search.Algorithms
 
             foreach (var node in _traverser.Traverse(new SearchNode<T>(initialState, null, null)))
             {
+                ProgressUpdated?.Invoke(new SearchSolution<T>(
+                    initialState,
+                    node.GetActionsToNode(),
+                    node.State));
+
                 if (goal.IsTerminal(node.State))
                     return new SearchSolution<T>(
                         initialState,
                         node.GetActionsToNode(),
                         node.State);
 
-                ProgressUpdated?.Invoke(new SearchSolution<T>(
-                    initialState,
-                    node.GetActionsToNode(),
-                    node.State,
-                    node.Cost));
             }
 
             throw new NoSolutionFoundException();
@@ -101,7 +101,8 @@ namespace SolversLibrary.Search.Algorithms
         {
             return new SearchNode<T>(
                 _stateTraversal.Traverse(state.State), 
-                state, _stateTraversal,
+                state, 
+                _stateTraversal,
                 _newStateCost(state.State, state.Cost, _stateTraversal));
         }
     }
