@@ -13,8 +13,8 @@ namespace SolversLibrary.Search.Algorithms
 {
     public class UniformCostSearch<T> : ISearchAlgorithm<T>
     {
-        private PriorityTraversalStrategy<SearchNode<T>> _strategy;
-        private ITraverser<SearchNode<T>> _traverser;
+        private PriorityTraversalStrategy<PathSearchState<T>> _strategy;
+        private ITraverser<PathSearchState<T>> _traverser;
 
         public UniformCostSearch(
             Traversers traverseType,
@@ -27,18 +27,18 @@ namespace SolversLibrary.Search.Algorithms
         internal UniformCostSearch(
             Traversers traverseType,
             IBranchingFunction<T> branchingFunction,
-            CostFunction<SearchNode<T>> costFunction,
+            CostFunction<PathSearchState<T>> costFunction,
             IEqualityComparer<T>? stateEquality = null)
         {
             var searchNodeComparer = new SearchNodeStateComparer<T>(stateEquality);
 
-            _strategy = new PriorityTraversalStrategy<SearchNode<T>>(
+            _strategy = new PriorityTraversalStrategy<PathSearchState<T>>(
                 costFunction,
                 searchNodeComparer);
 
-            _traverser = TraverserFactory.Create<SearchNode<T>>(
+            _traverser = TraverserFactory.Create<PathSearchState<T>>(
                 traverseType,
-                new SearchNodeBranchingFunction<T>(branchingFunction,
+                new PathSearchBranchingFunction<T>(branchingFunction,
                     (parentState, parentCost, traversal) => parentCost + traversal.Cost(parentState) ?? double.NaN),
                 _strategy,
                 searchNodeComparer);
@@ -61,7 +61,7 @@ namespace SolversLibrary.Search.Algorithms
             if (goal.IsTerminal(initialState))
                 return new SearchSolution<T>(initialState, Array.Empty<ITraversal<T>>(), initialState, 0.0);
 
-            foreach (var node in _traverser.Traverse(new SearchNode<T>(initialState, null, null, 0.0)))
+            foreach (var node in _traverser.Traverse(new PathSearchState<T>(initialState, null, null, 0.0)))
             {
                 ProgressUpdated?.Invoke(new SearchSolution<T>(
                     initialState,

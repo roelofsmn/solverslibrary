@@ -9,7 +9,7 @@ namespace SolversLibrary.Search.Factories
 {
     internal static class TraversalStrategyFactory
     {
-        internal static ITraversalStrategy<T> Create<T>(TraversalStrategies strategy)
+        internal static ITraversalStrategy<T> Create<T>(TraversalStrategies strategy, CostFunction<T>? cost = null)
         {
             switch (strategy)
             {
@@ -18,7 +18,8 @@ namespace SolversLibrary.Search.Factories
                 case TraversalStrategies.DepthFirst:
                     return new DepthFirstTraversalStrategy<T>();
                 case TraversalStrategies.Priority:
-                    throw new ArgumentException($"Strategy {TraversalStrategies.Priority} not supported!");
+                    ArgumentNullException.ThrowIfNull(cost);
+                    return new PriorityTraversalStrategy<T>(cost);
                 default:
                     return new DepthFirstTraversalStrategy<T>();
             }

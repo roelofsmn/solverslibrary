@@ -9,7 +9,7 @@ namespace SolversLibrary.Search
 {
     internal static class Extensions
     {
-        internal static ITraversal<T>[] GetActionsToNode<T>(this SearchNode<T> node)
+        internal static ITraversal<T>[] GetActionsToNode<T>(this PathSearchState<T> node)
         {
             LinkedList<ITraversal<T>> actions = new LinkedList<ITraversal<T>>();
             var currentNode = node;

@@ -9,68 +9,60 @@ using System.Threading.Tasks;
 
 namespace SolversLibrary.Search.Algorithms
 {
-    public class BranchAndBound<T> : ISearchAlgorithm<T>
+    public class BranchAndBound<T>// : ISearchAlgorithm<T>
     {
-        private readonly Func<T, double, ITraversal<T>, double> newStateCost;
-        private ITraverser<SearchNode<T>> _traverser;
+        private readonly Func<T, double> actualCost;
+        private ITraverser<T> _traverser;
 
-        private SearchSolution<T>? bestSolution;
+        private T? bestSolution;
         private BoundingBranchingFunction<T> branching;
 
         public BranchAndBound(
             Traversers traversalType,
-            TraversalStrategies traverseStrategy,
+            ITraversalStrategy<T> traverseStrategy,
             IBranchingFunction<T> branchingFunction,
-            Func<T, double, ITraversal<T>, double> newStateCost,
+            Func<T, double> stateCost,
             IEqualityComparer<T>? stateEquality = null)
         {
-            var strategy = TraversalStrategyFactory.Create<SearchNode<T>>(traverseStrategy);
+            //var strategy = TraversalStrategyFactory.Create<SearchNode<T>>(traverseStrategy);
+
             branching = new BoundingBranchingFunction<T>(
                 branchingFunction,
-                newStateCost);
-            _traverser = TraverserFactory.Create<SearchNode<T>>(
+                stateCost);
+            _traverser = TraverserFactory.Create<T>(
                 traversalType,
                 branching,
-                strategy,
-                new SearchNodeStateComparer<T>(stateEquality));
-            this.newStateCost = newStateCost;
+                traverseStrategy,
+                stateEquality);
+            this.actualCost = stateCost;
         }
 
         public IGoalDefinition<T> Goal { get; set; }
         public T InitialState { get; set; }
 
-        public event Action<SearchSolution<T>>? ProgressUpdated;
+        public event Action<T>? ProgressUpdated;
 
-        public SearchSolution<T> Run()
+        public T Run()
         {
             if (Goal == null || InitialState == null)
                 throw new ArgumentNullException();
             return Search(Goal, InitialState);
         }
 
-        public SearchSolution<T> Search(IGoalDefinition<T> goal, T initialState)
+        public T Search(IGoalDefinition<T> goal, T initialState)
         {
-            var rootCost = newStateCost(initialState, 0.0, null);
             if (goal.IsTerminal(initialState))
-                return new SearchSolution<T>(initialState, Array.Empty<ITraversal<T>>(), initialState, rootCost);
+                return initialState;
 
-            foreach (var node in _traverser.Traverse(new SearchNode<T>(initialState, null, null, rootCost)))
+            foreach (T node in _traverser.Traverse(initialState))
             {
-                ProgressUpdated?.Invoke(new SearchSolution<T>(
-                    initialState,
-                    node.GetActionsToNode(),
-                    node.State,
-                    node.Cost));
+                ProgressUpdated?.Invoke(node);
 
-                if (goal.IsTerminal(node.State) && node.Cost < branching.BestValue)
+                if (goal.IsTerminal(node) && actualCost(node) < branching.BestValue)
                 {
-                    bestSolution = new SearchSolution<T>(
-                        initialState,
-                        node.GetActionsToNode(),
-                        node.State,
-                        node.Cost);
+                    bestSolution = node;
 
-                    branching.BestValue = node.Cost;
+                    branching.BestValue = actualCost(node);
                     continue;
                 }
             }
@@ -81,20 +73,25 @@ namespace SolversLibrary.Search.Algorithms
         }
     }
 
-    internal class BoundingBranchingFunction<T> : SearchNodeBranchingFunction<T>
+    internal class BoundingBranchingFunction<T> : IBranchingFunction<T>
     {
+        private readonly IBranchingFunction<T> branchingFunction;
+        private readonly Func<T, double> costOfState;
+
         public double BestValue { get; set; } = double.PositiveInfinity;
         internal BoundingBranchingFunction(
             IBranchingFunction<T> branchingFunction,
-            Func<T, double, ITraversal<T>, double> newStateCost) : base(branchingFunction, newStateCost)
+            Func<T, double> costOfState)
         {
+            this.branchingFunction = branchingFunction;
+            this.costOfState = costOfState;
         }
 
-        public override IEnumerable<ITraversal<SearchNode<T>>> Branch(SearchNode<T> current)
+        public IEnumerable<ITraversal<T>> Branch(T current)
         {
-            if (current.Cost > BestValue)
-                return Enumerable.Empty<ITraversal<SearchNode<T>>>();
-            return base.Branch(current);
+            if (costOfState(current) > BestValue)
+                return Enumerable.Empty<ITraversal<T>>();
+            return branchingFunction.Branch(current);
         }
     }
 }
