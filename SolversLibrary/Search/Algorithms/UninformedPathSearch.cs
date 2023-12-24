@@ -1,5 +1,4 @@
-﻿using MathNet.Numerics.RootFinding;
-using SolversLibrary.Search.Factories;
+﻿using SolversLibrary.Search.Factories;
 using SolversLibrary.Search.Traversal;
 using System;
 using System.Collections.Generic;
