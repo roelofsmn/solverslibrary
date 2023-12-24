@@ -20,7 +20,7 @@ namespace Tests.Search
         private readonly ITraversal<string> action5;
         private readonly IBranchingFunction<string> branching;
         private readonly string initialState;
-        private List<SearchSolution<string>> searchStates;
+        private List<PathSearchState<string>> searchStates;
 
         public BranchAndBoundTest()
         {
@@ -59,10 +59,10 @@ namespace Tests.Search
 
             initialState = "sibiu";
 
-            searchStates = new List<SearchSolution<string>>();
+            searchStates = new List<PathSearchState<string>>();
         }
 
-        private void BnB_ProgressUpdated(SearchSolution<string> obj)
+        private void BnB_ProgressUpdated(PathSearchState<string> obj)
         {
             searchStates.Add(obj);
         }
@@ -72,36 +72,40 @@ namespace Tests.Search
         {
             // See section 3.4, page 85 of Artificial Intelligence: A Modern Approach, 3rd edition, S.J. Russell and P. Norvig
             // Assign
-            var bnb = new BranchAndBound<string>(
+            var dfs = new DepthFirstTraversalStrategy<PathSearchState<string>>();
+            var bnb = new BranchAndBound<PathSearchState<string>>(
                 SolversLibrary.Search.Factories.Traversers.Graph,
-                SolversLibrary.Search.Factories.TraversalStrategies.DepthFirst,
-                branching,
-                (state, cost, traversal) => cost + traversal?.Cost(state) ?? 0.0);
+                dfs,
+                new PathSearchBranchingFunction<string>(branching, (state, cost, traversal) => cost + traversal?.Cost(state) ?? 0.0),
+                sn => sn.Cost);
+
             bnb.ProgressUpdated += BnB_ProgressUpdated;
 
+            var goal = Substitute.For<IGoalDefinition<PathSearchState<string>>>();
+            goal.IsTerminal(Arg.Any<PathSearchState<string>>()).Returns(x => problem.IsTerminal(((PathSearchState<string>)x[0]).State));
+
             // Act
-            var result = bnb.Search(problem, initialState);
+            var result = bnb.Search(goal, new PathSearchState<string>(initialState, null, null, 0));
 
             // Assert
             // Check final result
-            Assert.Equal("sibiu", result.InitialState);
-            Assert.Equal(new ITraversal<string>[] { action2, action4, action5 }, result.ActionPath);
+            Assert.Equal(new ITraversal<string>[] { action2, action4, action5 }, result.GetActionsToNode().ToArray());
             Assert.Equal(278, result.Cost);
-            Assert.Equal("bucharest", result.TerminalState);
+            Assert.Equal("bucharest", result.State);
 
             // Check search path
             Assert.Equal(6, searchStates.Count);
 
-            Assert.Equal(new ITraversal<string>[] { }, searchStates[0].ActionPath);
-            Assert.Equal(new ITraversal<string>[] { action2 }, searchStates[1].ActionPath);
-            Assert.Equal(new ITraversal<string>[] { action2, action4 }, searchStates[2].ActionPath);
+            Assert.Equal(new ITraversal<string>[] { }, searchStates[0].GetActionsToNode().ToArray());
+            Assert.Equal(new ITraversal<string>[] { action2 }, searchStates[1].GetActionsToNode().ToArray());
+            Assert.Equal(new ITraversal<string>[] { action2, action4 }, searchStates[2].GetActionsToNode().ToArray());
             // Next we expand the full path:
-            Assert.Equal(new ITraversal<string>[] { action2, action4, action5 }, searchStates[3].ActionPath);
+            Assert.Equal(new ITraversal<string>[] { action2, action4, action5 }, searchStates[3].GetActionsToNode().ToArray());
             // we set best value to 278, but continue the search (we don't know this is the best path already...)
 
-            Assert.Equal(new ITraversal<string>[] { action1 }, searchStates[4].ActionPath);
+            Assert.Equal(new ITraversal<string>[] { action1 }, searchStates[4].GetActionsToNode().ToArray());
             // we expand the full path:
-            Assert.Equal(new ITraversal<string>[] { action1, action3 }, searchStates[5].ActionPath);
+            Assert.Equal(new ITraversal<string>[] { action1, action3 }, searchStates[5].GetActionsToNode().ToArray());
             // It is terminal, but not better
             // Now we're done... as there are no more states to expand
         }
