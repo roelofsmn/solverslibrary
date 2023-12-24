@@ -35,4 +35,4 @@ var outputSpan = b.GetSubMatrix_array_span(
 PrintArray(outputSpan.ToArray());
 //var summary = BenchmarkRunner.Run<SubmatrixBenchmark>();
 
-BenchmarkRunner.Run<StackBenchmark>();
+BenchmarkRunner.Run<PriorityQueueBenchmark>();

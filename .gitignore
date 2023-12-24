@@ -11,3 +11,5 @@ TestResults/
 **/bin
 *.suo
 *.csproj.user
+/Benchmarks/BenchmarkDotNet.Artifacts/results
+/Benchmarks/BenchmarkDotNet.Artifacts
