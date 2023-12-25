@@ -49,11 +49,27 @@ namespace Tests.Search
             action5 = Substitute.For<ITraversal<string>>();
             action5.Traverse("pitesti").Returns("bucharest");
 
+            var action6 = Substitute.For<ITraversal<string>>();
+            action6.Traverse("fagaras").Returns("sibiu");
+
+            var action7 = Substitute.For<ITraversal<string>>();
+            action7.Traverse("rimnicu").Returns("sibiu");
+
+            var action8 = Substitute.For<ITraversal<string>>();
+            action8.Traverse("pitesti").Returns("rimnicu");
+
+            var action9 = Substitute.For<ITraversal<string>>();
+            action9.Traverse("bucharest").Returns("fagaras");
+
+            var action10 = Substitute.For<ITraversal<string>>();
+            action10.Traverse("bucharest").Returns("pitesti");
+
             branching = Substitute.For<IBranchingFunction<string>>();
             branching.Branch("sibiu").Returns(new ITraversal<string>[] { action1, action2 });
-            branching.Branch("rimnicu").Returns(new ITraversal<string>[] { action4 });
-            branching.Branch("pitesti").Returns(new ITraversal<string>[] { action5 });
-            branching.Branch("fagaras").Returns(new ITraversal<string>[] { action3 });
+            branching.Branch("rimnicu").Returns(new ITraversal<string>[] { action4, action7 });
+            branching.Branch("pitesti").Returns(new ITraversal<string>[] { action5, action8 });
+            branching.Branch("fagaras").Returns(new ITraversal<string>[] { action3, action6 });
+            branching.Branch("bucharest").Returns(new ITraversal<string>[] { action9, action10 });
 
             initialState = "sibiu";
 
@@ -107,15 +123,17 @@ namespace Tests.Search
             var pathBranching = new PathSearchBranchingFunction<string>(branching, (s, c, t) => 1);
             var traverser = new GraphTraverser<PathSearchState<string>>(
                 pathBranching,
-                strategy
+                strategy,
+                new PathSearchNodeStateComparer<string>()
                 );
             var bfs = new BestFirstSearch<PathSearchState<string>>(
                 traverser);
             bfs.Explored += Bfs_ProgressUpdated;
-
-            // Act
             var pathGoal = new PathSearchGoal<string>(problem);
             var pathInitialState = new PathSearchState<string>(initialState, null, null, 0.0);
+
+            // Act
+
             var result = bfs.Search(pathGoal, pathInitialState);
 
             // Assert

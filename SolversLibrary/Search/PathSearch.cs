@@ -42,21 +42,21 @@ namespace SolversLibrary.Search
 
     internal class PathSearchNodeStateComparer<T> : IEqualityComparer<PathSearchState<T>>
     {
-        private IEqualityComparer<T>? stateEqualityComparer;
+        private IEqualityComparer<T> stateEqualityComparer;
         internal PathSearchNodeStateComparer(IEqualityComparer<T>? stateEquality = null)
         {
-            stateEqualityComparer = stateEquality;
+            stateEqualityComparer = stateEquality ?? EqualityComparer<T>.Default;
         }
         public bool Equals(PathSearchState<T>? x, PathSearchState<T>? y)
         {
             if (ReferenceEquals(x, null) || ReferenceEquals(y, null) || ReferenceEquals(x.State, null))
                 return false;
-            return stateEqualityComparer?.Equals(x.State, y.State) ?? x.State.Equals(y.State);
+            return stateEqualityComparer.Equals(x.State, y.State);
         }
 
         public int GetHashCode([DisallowNull] PathSearchState<T> obj)
         {
-            return obj.GetHashCode();
+            return obj.State!.GetHashCode();
         }
     }
 
