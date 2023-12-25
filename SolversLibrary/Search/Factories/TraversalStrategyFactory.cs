@@ -9,7 +9,7 @@ namespace SolversLibrary.Search.Factories
 {
     internal static class TraversalStrategyFactory
     {
-        internal static ITraversalStrategy<T> Create<T>(TraversalStrategies strategy, CostFunction<T>? cost = null)
+        internal static ITraversalStrategy<T> Create<T>(TraversalStrategies strategy, Func<T, double>? cost = null)
         {
             switch (strategy)
             {

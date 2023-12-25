@@ -23,6 +23,8 @@ namespace SolversLibrary.Search.Traversal
             this.strategy = strategy;
         }
 
+        public event Action<T>? Generated;
+
         public IEnumerable<T> Traverse(T start)
         {
             strategy.Clear();
@@ -35,7 +37,11 @@ namespace SolversLibrary.Search.Traversal
                 yield return node;
                
                 foreach (var traversal in branchingFunction.Branch(node))
-                    strategy.AddCandidateState(traversal.Traverse(node));
+                {
+                    var child = traversal.Traverse(node);
+                    Generated?.Invoke(child);
+                    strategy.AddCandidateState(child);
+                }
             }
         }
     }

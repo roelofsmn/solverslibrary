@@ -21,7 +21,7 @@ namespace Tests.Search
         private readonly IBranchingFunction<string> branching;
         private readonly IHeuristic<string> heuristic;
         private readonly string initialState;
-        private List<SearchSolution<string>> searchStates;
+        private List<PathSearchState<string>> searchStates;
 
         public AstarSearchTest()
         {
@@ -67,7 +67,7 @@ namespace Tests.Search
 
             initialState = "sibiu";
 
-            searchStates = new List<SearchSolution<string>>();
+            searchStates = new List<PathSearchState<string>>();
         }
 
         [Fact]
@@ -75,47 +75,51 @@ namespace Tests.Search
         {
             // See section 3.4, page 85 of Artificial Intelligence: A Modern Approach, 3rd edition, S.J. Russell and P. Norvig
             // Assign
-            var astar = new AstarSearch<string>(
+
+            var pathBranch = new PathSearchBranchingFunction<string>(branching, (state, cost, traversal) => cost + traversal.Cost(state) ?? 0);
+            var astar = new AstarSearch<PathSearchState<string>>(
                 SolversLibrary.Search.Factories.Traversers.Graph,
-                branching,
-                heuristic
+                pathBranch,
+                (pathNode) => pathNode.Cost,
+                (pathNode) => heuristic.Heuristic(pathNode.State)
                 );
-            astar.ProgressUpdated += Astar_ProgressUpdated;
+            astar.Explored += Astar_ProgressUpdated;
 
             // Act
-            var result = astar.Search(problem, initialState);
+            var pathGoal = new PathSearchGoal<string>(problem);
+            var pathInitialState = new PathSearchState<string>(initialState, null, null, 0.0);
+            var result = astar.Search(pathGoal, pathInitialState);
 
             // Assert
             // Check final result
-            Assert.Equal("sibiu", result.InitialState);
-            Assert.Equal(new ITraversal<string>[] { action2, action4, action5 }, result.ActionPath);
+            Assert.Equal(new ITraversal<string>[] { action2, action4, action5 }, result.GetActionsToNode().ToArray());
             Assert.Equal(278, result.Cost);
-            Assert.Equal("bucharest", result.TerminalState);
+            Assert.Equal("bucharest", result.State);
 
             // Check search path
             Assert.Equal(5, searchStates.Count);
-            Assert.Equal(new ITraversal<string>[] { }, searchStates[0].ActionPath);
+            Assert.Equal(new ITraversal<string>[] { }, searchStates[0].GetActionsToNode().ToArray());
             Assert.Equal(0, searchStates[0].Cost); // heuristic cost
 
             // at this point, rimnicu has 193 + 80 = 273, and fagaras has 176 + 99 = 275
-            Assert.Equal(new ITraversal<string>[] { action2 }, searchStates[1].ActionPath); // because it has lowest total estimated cost
+            Assert.Equal(new ITraversal<string>[] { action2 }, searchStates[1].GetActionsToNode().ToArray()); // because it has lowest total estimated cost
             Assert.Equal(80, searchStates[1].Cost);
             // adds pitesti with total cost 177 + 100 = 277
 
-            Assert.Equal(new ITraversal<string>[] { action1 }, searchStates[2].ActionPath); // because it has lowest cost
+            Assert.Equal(new ITraversal<string>[] { action1 }, searchStates[2].GetActionsToNode().ToArray()); // because it has lowest cost
             Assert.Equal(99, searchStates[2].Cost);
             // adds bucharest with total cost 310
 
             // we first explore the lower cost path (action2)
-            Assert.Equal(new ITraversal<string>[] { action2, action4 }, searchStates[3].ActionPath);
+            Assert.Equal(new ITraversal<string>[] { action2, action4 }, searchStates[3].GetActionsToNode().ToArray());
             Assert.Equal(177, searchStates[3].Cost);
             // now, the path (action2, action4, action5) is added to the frontier, with a cost of 278, and is expanded next.
 
-            Assert.Equal(new ITraversal<string>[] { action2, action4, action5 }, searchStates[4].ActionPath); // arrives at bucharest
+            Assert.Equal(new ITraversal<string>[] { action2, action4, action5 }, searchStates[4].GetActionsToNode().ToArray()); // arrives at bucharest
             Assert.Equal(278, searchStates[4].Cost);
         }
 
-        private void Astar_ProgressUpdated(SearchSolution<string> obj)
+        private void Astar_ProgressUpdated(PathSearchState<string> obj)
         {
             searchStates.Add(obj);
         }

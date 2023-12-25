@@ -79,7 +79,7 @@ namespace Tests.Search
                 new PathSearchBranchingFunction<string>(branching, (state, cost, traversal) => cost + traversal?.Cost(state) ?? 0.0),
                 sn => sn.Cost);
 
-            bnb.ProgressUpdated += BnB_ProgressUpdated;
+            bnb.Explored += BnB_ProgressUpdated;
 
             var goal = Substitute.For<IGoalDefinition<PathSearchState<string>>>();
             goal.IsTerminal(Arg.Any<PathSearchState<string>>()).Returns(x => problem.IsTerminal(((PathSearchState<string>)x[0]).State));

@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace SolversLibrary.Search.Algorithms
 {
-    public class BranchAndBound<T>// : ISearchAlgorithm<T>
+    public class BranchAndBound<T> : ISearchAlgorithm<T>
     {
         private readonly Func<T, double> actualCost;
         private ITraverser<T> _traverser;
@@ -37,17 +37,7 @@ namespace SolversLibrary.Search.Algorithms
             this.actualCost = stateCost;
         }
 
-        public IGoalDefinition<T> Goal { get; set; }
-        public T InitialState { get; set; }
-
-        public event Action<T>? ProgressUpdated;
-
-        public T Run()
-        {
-            if (Goal == null || InitialState == null)
-                throw new ArgumentNullException();
-            return Search(Goal, InitialState);
-        }
+        public event Action<T>? Explored;
 
         public T Search(IGoalDefinition<T> goal, T initialState)
         {
@@ -56,12 +46,11 @@ namespace SolversLibrary.Search.Algorithms
 
             foreach (T node in _traverser.Traverse(initialState))
             {
-                ProgressUpdated?.Invoke(node);
+                Explored?.Invoke(node);
 
                 if (goal.IsTerminal(node) && actualCost(node) < branching.BestValue)
                 {
                     bestSolution = node;
-
                     branching.BestValue = actualCost(node);
                     continue;
                 }

@@ -27,6 +27,8 @@ namespace SolversLibrary.Search.Traversal
             explored = new HashSet<T>(stateEquality);
         }
 
+        public event Action<T>? Generated;
+
         public IEnumerable<T> Traverse(T start)
         {
             strategy.Clear();
@@ -44,8 +46,11 @@ namespace SolversLibrary.Search.Traversal
                 foreach (var traversal in branchingFunction.Branch(node))
                 {
                     var child = traversal.Traverse(node);
+                    Generated?.Invoke(child);
+
                     if (!explored.Contains(child) && !strategy.Contains(child))
                         strategy.AddCandidateState(child);
+
                 }
             }
         }

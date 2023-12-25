@@ -13,9 +13,14 @@ namespace SolversLibrary.Search.Traversal
         {
             frontier = new Queue<T>();
         }
+
+        public event Action<T>? Enqueued;
+        public event Action<T>? Dequeued;
+
         public void AddCandidateState(T state)
         {
             frontier.Enqueue(state);
+            Enqueued?.Invoke(state);
         }
 
         public void Clear()
@@ -35,7 +40,9 @@ namespace SolversLibrary.Search.Traversal
 
         public T NextState()
         {
-            return frontier.Dequeue();
+            T item = frontier.Dequeue();
+            Dequeued?.Invoke(item);
+            return item;
         }
     }
 }

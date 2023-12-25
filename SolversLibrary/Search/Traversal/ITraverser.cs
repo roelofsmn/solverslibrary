@@ -14,5 +14,7 @@ namespace SolversLibrary.Search.Traversal
         /// <param name="start">State to start enumerating from.</param>
         /// <returns>A sequence of states reached from the starting state.</returns>
         IEnumerable<T> Traverse(T start);
+
+        event Action<T>? Generated;
     }
 }

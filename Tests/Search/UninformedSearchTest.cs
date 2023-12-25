@@ -22,7 +22,7 @@ namespace Tests.Search
         private readonly ITraversal<string> action5;
         private readonly IBranchingFunction<string> branching;
         private readonly string initialState;
-        private List<SearchSolution<string>> searchStates;
+        private List<PathSearchState<string>> searchStates;
 
         public UninformedSearchTest()
         {
@@ -57,10 +57,10 @@ namespace Tests.Search
 
             initialState = "sibiu";
 
-            searchStates = new List<SearchSolution<string>>();
+            searchStates = new List<PathSearchState<string>>();
         }
 
-        private void Bfs_ProgressUpdated(SearchSolution<string> obj)
+        private void Bfs_ProgressUpdated(PathSearchState<string> obj)
         {
             searchStates.Add(obj);
         }
@@ -70,55 +70,32 @@ namespace Tests.Search
         {
             // See section 3.4, page 85 of Artificial Intelligence: A Modern Approach, 3rd edition, S.J. Russell and P. Norvig
             // Assign
-            var bfs = new UninformedPathSearch<string>(
-                TraversalStrategies.BreadthFirst,
-                Traversers.Graph,
-                branching);
-            bfs.ProgressUpdated += Bfs_ProgressUpdated;
+            var strategy = new BreadthFirstTraversalStrategy<PathSearchState<string>>();
+            var pathBranching = new PathSearchBranchingFunction<string>(branching, (s, c, t) => 1);
+            var traverser = new GraphTraverser<PathSearchState<string>>(
+                pathBranching,
+                strategy
+                );
+            var bfs = new BestFirstSearch<PathSearchState<string>>(
+                traverser);
+            bfs.Explored += Bfs_ProgressUpdated;
 
             // Act
-            var result = bfs.Search(problem, initialState);
+            var pathGoal = new PathSearchGoal<string>(problem);
+            var pathInitialState = new PathSearchState<string>(initialState, null, null, 0.0);
+            var result = bfs.Search(pathGoal, pathInitialState);
 
             // Assert
             // Check final result
-            Assert.Equal("sibiu", result.InitialState);
-            Assert.Equal(new ITraversal<string>[] { action1, action3 }, result.ActionPath);
-            Assert.Equal("bucharest", result.TerminalState);
+            Assert.Equal(new ITraversal<string>[] { action1, action3 }, result.GetActionsToNode().ToArray());
+            Assert.Equal("bucharest", result.State);
 
             // Check search path
             Assert.Equal(4, searchStates.Count);
-            Assert.Equal(new ITraversal<string>[] { }, searchStates[0].ActionPath);
-            Assert.Equal(new ITraversal<string>[] { action1 }, searchStates[1].ActionPath);
-            Assert.Equal(new ITraversal<string>[] { action2 }, searchStates[2].ActionPath);
-            Assert.Equal(new ITraversal<string>[] { action1, action3 }, searchStates[3].ActionPath);
-        }
-
-        [Fact]
-        public void BreadthFirstTreeSearch()
-        {
-            // See section 3.4, page 85 of Artificial Intelligence: A Modern Approach, 3rd edition, S.J. Russell and P. Norvig
-            // Assign
-            var bfs = new UninformedPathSearch<string>(
-                TraversalStrategies.BreadthFirst,
-                Traversers.Tree,
-                branching);
-            bfs.ProgressUpdated += Bfs_ProgressUpdated;
-
-            // Act
-            var result = bfs.Search(problem, initialState);
-
-            // Assert
-            // Check final result
-            Assert.Equal("sibiu", result.InitialState);
-            Assert.Equal(new ITraversal<string>[] { action1, action3 }, result.ActionPath);
-            Assert.Equal("bucharest", result.TerminalState);
-
-            // Check search path
-            Assert.Equal(4, searchStates.Count);
-            Assert.Equal(new ITraversal<string>[] { }, searchStates[0].ActionPath);
-            Assert.Equal(new ITraversal<string>[] { action1 }, searchStates[1].ActionPath);
-            Assert.Equal(new ITraversal<string>[] { action2 }, searchStates[2].ActionPath);
-            Assert.Equal(new ITraversal<string>[] { action1, action3 }, searchStates[3].ActionPath);
+            Assert.Equal(new ITraversal<string>[] { }, searchStates[0].GetActionsToNode().ToArray());
+            Assert.Equal(new ITraversal<string>[] { action1 }, searchStates[1].GetActionsToNode().ToArray());
+            Assert.Equal(new ITraversal<string>[] { action2 }, searchStates[2].GetActionsToNode().ToArray());
+            Assert.Equal(new ITraversal<string>[] { action1, action3 }, searchStates[3].GetActionsToNode().ToArray());
         }
 
         [Fact]
@@ -126,54 +103,33 @@ namespace Tests.Search
         {
             // See section 3.4, page 85 of Artificial Intelligence: A Modern Approach, 3rd edition, S.J. Russell and P. Norvig
             // Assign
-            var dfs = new UninformedPathSearch<string>(
-                TraversalStrategies.DepthFirst,
-                Traversers.Graph,
-                branching);
-            dfs.ProgressUpdated += Bfs_ProgressUpdated;
+            var strategy = new DepthFirstTraversalStrategy<PathSearchState<string>>();
+            var pathBranching = new PathSearchBranchingFunction<string>(branching, (s, c, t) => 1);
+            var traverser = new GraphTraverser<PathSearchState<string>>(
+                pathBranching,
+                strategy
+                );
+            var bfs = new BestFirstSearch<PathSearchState<string>>(
+                traverser);
+            bfs.Explored += Bfs_ProgressUpdated;
 
             // Act
-            var result = dfs.Search(problem, initialState);
+            var pathGoal = new PathSearchGoal<string>(problem);
+            var pathInitialState = new PathSearchState<string>(initialState, null, null, 0.0);
+            var result = bfs.Search(pathGoal, pathInitialState);
 
             // Assert
             // Check final result
-            Assert.Equal("sibiu", result.InitialState);
-            Assert.Equal(new ITraversal<string>[] { action2, action4, action5 }, result.ActionPath);
-            Assert.Equal("bucharest", result.TerminalState);
+            Assert.Equal(new ITraversal<string>[] { action2, action4, action5 }, result.GetActionsToNode().ToArray());
+            Assert.Equal("bucharest", result.State);
 
             // Check search path
             Assert.Equal(4, searchStates.Count);
-            Assert.Equal(new ITraversal<string>[] { }, searchStates[0].ActionPath);
-            Assert.Equal(new ITraversal<string>[] { action2 }, searchStates[1].ActionPath);
-            Assert.Equal(new ITraversal<string>[] { action2, action4 }, searchStates[2].ActionPath);
-            Assert.Equal(new ITraversal<string>[] { action2, action4, action5 }, searchStates[3].ActionPath);
+            Assert.Equal(new ITraversal<string>[] { }, searchStates[0].GetActionsToNode().ToArray());
+            Assert.Equal(new ITraversal<string>[] { action2 }, searchStates[1].GetActionsToNode().ToArray());
+            Assert.Equal(new ITraversal<string>[] { action2, action4 }, searchStates[2].GetActionsToNode().ToArray());
+            Assert.Equal(new ITraversal<string>[] { action2, action4, action5 }, searchStates[3].GetActionsToNode().ToArray());
         }
-        [Fact]
-        public void DepthFirstTreeSearchTest()
-        {
-            // See section 3.4, page 85 of Artificial Intelligence: A Modern Approach, 3rd edition, S.J. Russell and P. Norvig
-            // Assign
-            var dfs = new UninformedPathSearch<string>(
-                TraversalStrategies.DepthFirst,
-                Traversers.Tree,
-                branching);
-            dfs.ProgressUpdated += Bfs_ProgressUpdated;
 
-            // Act
-            var result = dfs.Search(problem, initialState);
-
-            // Assert
-            // Check final result
-            Assert.Equal("sibiu", result.InitialState);
-            Assert.Equal(new ITraversal<string>[] { action2, action4, action5 }, result.ActionPath);
-            Assert.Equal("bucharest", result.TerminalState);
-
-            // Check search path
-            Assert.Equal(4, searchStates.Count);
-            Assert.Equal(new ITraversal<string>[] { }, searchStates[0].ActionPath);
-            Assert.Equal(new ITraversal<string>[] { action2 }, searchStates[1].ActionPath);
-            Assert.Equal(new ITraversal<string>[] { action2, action4 }, searchStates[2].ActionPath);
-            Assert.Equal(new ITraversal<string>[] { action2, action4, action5 }, searchStates[3].ActionPath);
-        }
     }
 }

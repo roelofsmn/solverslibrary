@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace SolversLibrary.Search
 {
-    internal static class Extensions
+    internal static class PathSearchExtensions
     {
         internal static ITraversal<T>[] GetActionsToNode<T>(this PathSearchState<T> node)
         {

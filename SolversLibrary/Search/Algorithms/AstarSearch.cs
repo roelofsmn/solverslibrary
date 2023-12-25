@@ -18,9 +18,10 @@ namespace SolversLibrary.Search.Algorithms
         public AstarSearch(
             Traversers traverseType,
             IBranchingFunction<T> branchingFunction,
-            IHeuristic<T> heuristic,
+            Func<T, double> stateCost,
+            Func<T, double> heuristic,
             IEqualityComparer<T>? stateEquality = null)
-            : base(traverseType, branchingFunction, x => x.Cost + heuristic.Heuristic(x.State), stateEquality)
+            : base(traverseType, branchingFunction, x => stateCost(x) + heuristic(x), stateEquality)
         {
         }
     }

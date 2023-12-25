@@ -13,6 +13,9 @@ namespace SolversLibrary.Search.Traversal
         bool ContainsCandidates();
         bool Contains(T state);
         void Clear();
+
+        event Action<T>? Enqueued;
+        event Action<T>? Dequeued;
         
     }
 }

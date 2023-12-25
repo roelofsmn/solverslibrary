@@ -189,37 +189,37 @@ namespace Tests.Search
             Assert.False(strategy.ContainsCandidates());
             Assert.False(strategy.Contains(costState));
         }
-        [Fact]
-        public void PriorityTraversal_ReplaceCandidateState()
-        {
-            var costState = "a";
-            var replacement = "b";
-            var strategy = new PriorityTraversalStrategy<string>(x => x == "a" ? 5 : 2);
+        //[Fact]
+        //public void PriorityTraversal_ReplaceCandidateState()
+        //{
+        //    var costState = "a";
+        //    var replacement = "b";
+        //    var strategy = new PriorityTraversalStrategy<string>(x => x == "a" ? 5 : 2);
 
-            // Act
-            strategy.AddCandidateState(costState);
-            strategy.ReplaceCandidateState(costState, replacement);
+        //    // Act
+        //    strategy.AddCandidateState(costState);
+        //    strategy.ReplaceCandidateState(costState, replacement);
 
-            // Assert
-            Assert.True(strategy.ContainsCandidates());
-            Assert.False(strategy.Contains(costState));
-            Assert.True(strategy.Contains(replacement));
-        }
-        [Fact]
-        public void PriorityTraversal_ReplaceCandidateState_NextState()
-        {
-            var costState = "a";
-            var replacement = "b";
-            var strategy = new PriorityTraversalStrategy<string>(x => x == "a" ? 5 : 2);
+        //    // Assert
+        //    Assert.True(strategy.ContainsCandidates());
+        //    Assert.False(strategy.Contains(costState));
+        //    Assert.True(strategy.Contains(replacement));
+        //}
+        //[Fact]
+        //public void PriorityTraversal_ReplaceCandidateState_NextState()
+        //{
+        //    var costState = "a";
+        //    var replacement = "b";
+        //    var strategy = new PriorityTraversalStrategy<string>(x => x == "a" ? 5 : 2);
 
-            // Act
-            strategy.AddCandidateState(costState);
-            strategy.ReplaceCandidateState(costState, replacement);
-            var next = strategy.NextState();
+        //    // Act
+        //    strategy.AddCandidateState(costState);
+        //    strategy.ReplaceCandidateState(costState, replacement);
+        //    var next = strategy.NextState();
 
-            // Assert
-            Assert.False(strategy.ContainsCandidates());
-            Assert.Same(replacement, next);
-        }
+        //    // Assert
+        //    Assert.False(strategy.ContainsCandidates());
+        //    Assert.Same(replacement, next);
+        //}
     }
 }

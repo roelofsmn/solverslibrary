@@ -27,11 +27,15 @@ namespace SolversLibrary.Search.Traversal
     {
         //private PriorityQueue<T, double> frontier; // TODO: use this instead of custom implementation...
         private SortedDictionary<double, LinkedList<T>> frontier; // Should we make it possible to use a stack as well???
-        private CostFunction<T> _costFunction;
+        private Func<T, double> _costFunction;
         private double minCost;
         private IEqualityComparer<T>? _equalityComparer;
+
+        public event Action<T>? Enqueued;
+        public event Action<T>? Dequeued;
+
         public PriorityTraversalStrategy(
-            CostFunction<T> costFunction,
+            Func<T, double> costFunction,
             IEqualityComparer<T>? equalityComparer = null)
         {
             frontier = new SortedDictionary<double, LinkedList<T>>();
@@ -50,6 +54,7 @@ namespace SolversLibrary.Search.Traversal
                 if (cost < minCost)
                     minCost = cost;
             }
+            Enqueued?.Invoke(state);
         }
 
         public void Clear()
@@ -71,18 +76,22 @@ namespace SolversLibrary.Search.Traversal
         public T NextState()
         {
             var minStates = frontier[minCost];
+            T item;
             if (minStates.Count == 1)
             {
                 frontier.Remove(minCost);
                 minCost = frontier.Any() ? frontier.Keys.Min() : double.PositiveInfinity;
-                return minStates.Single();
+                item = minStates.Single();
             }
             else if (minStates.Count > 1)
             {
-                return minStates.First!.Value; // frontier acts like last in first out stack (depth first)
+                item = minStates.First!.Value; // frontier acts like last in first out stack (depth first)
             }
             else
                 throw new InvalidOperationException();
+
+            Dequeued?.Invoke(item);
+            return item;
         }
 
         public void ReplaceCandidateState(T current, T replacement)
