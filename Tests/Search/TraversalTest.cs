@@ -249,5 +249,75 @@ namespace Tests.Search
         //    Assert.False(strategy.ContainsCandidates());
         //    Assert.Same(replacement, next);
         //}
+
+        [Fact]
+        public void PriorityGraphTraversal()
+        {
+            // Assign
+            var explorer = Substitute.For<IBranchingFunction<string>>();
+
+            var ab = Substitute.For<ITraversal<string>>();
+            ab.Traverse("a").Returns("b");
+
+            var ac = Substitute.For<ITraversal<string>>();
+            ac.Traverse("a").Returns("c");
+
+            var ba = Substitute.For<ITraversal<string>>();
+            ba.Traverse("b").Returns("a");
+
+            var bd = Substitute.For<ITraversal<string>>();
+            bd.Traverse("b").Returns("d");
+
+            var bc = Substitute.For<ITraversal<string>>();
+            bc.Traverse("b").Returns("c");
+
+            var ca = Substitute.For<ITraversal<string>>();
+            ca.Traverse("c").Returns("a");
+
+            var cb = Substitute.For<ITraversal<string>>();
+            cb.Traverse("c").Returns("b");
+
+            var cd = Substitute.For<ITraversal<string>>();
+            cd.Traverse("c").Returns("d");
+
+            var db = Substitute.For<ITraversal<string>>();
+            db.Traverse("d").Returns("b");
+
+            var dc = Substitute.For<ITraversal<string>>();
+            dc.Traverse("d").Returns("c");
+
+            explorer.Branch("a").Returns(new ITraversal<string>[] { ab, ac });
+            explorer.Branch("b").Returns(new ITraversal<string>[] { ba, bd, bc });
+            explorer.Branch("c").Returns(new ITraversal<string>[] { ca, cb, cd });
+            explorer.Branch("d").Returns(new ITraversal<string>[] { db, dc });
+
+            Func<string, double> costFunction = (state) =>
+            {
+                switch (state)
+                {
+                    case "a":
+                        return 0;
+                    case "b":
+                        return 3;
+                    case "c":
+                        return 1;
+                    case "d":
+                        return 2;
+                    default:
+                        return 0;
+                }
+            };
+
+            var strategy = new PriorityTraversalStrategy<string>(costFunction);
+
+            // Act
+            var traverser = new GraphTraverser<string>(
+                explorer,
+                strategy);
+            var results = traverser.Traverse("a").ToArray();
+
+            // Assert
+            Assert.Equal(new string[] { "a", "c", "d", "b" }, results);
+        }
     }
 }
