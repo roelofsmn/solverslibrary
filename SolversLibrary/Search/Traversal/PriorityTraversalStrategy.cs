@@ -86,6 +86,7 @@ namespace SolversLibrary.Search.Traversal
             else if (minStates.Count > 1)
             {
                 item = minStates.First!.Value; // frontier acts like last in first out stack (depth first)
+                frontier[minCost].RemoveFirst();
             }
             else
                 throw new InvalidOperationException();
