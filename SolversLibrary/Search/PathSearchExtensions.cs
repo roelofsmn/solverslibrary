@@ -20,5 +20,18 @@ namespace SolversLibrary.Search
             }
             return actions.ToArray();
         }
+
+        internal static T[] GetStatesToNode<T>(this PathSearchState<T> node)
+        {
+            LinkedList<T> states = new LinkedList<T>();
+            var currentNode = node;
+            states.AddFirst(node.State);
+            while (currentNode.Parent != null)
+            {
+                states.AddFirst(currentNode.Parent.State ?? throw new NullReferenceException("Search node action is null, while parent isn't."));
+                currentNode = currentNode.Parent;
+            }
+            return states.ToArray();
+        }
     }
 }

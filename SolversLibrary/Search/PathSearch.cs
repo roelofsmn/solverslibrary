@@ -21,29 +21,35 @@ namespace SolversLibrary.Search
         /// <summary>
         /// The actual state represented by this point in the search path.
         /// </summary>
-        internal T State { get; init; }
+        public T State { get; init; }
 
         /// <summary>
         /// The parent search node from which this node was generated.
         /// </summary>
-        internal PathSearchState<T>? Parent { get; init; }
+        public PathSearchState<T>? Parent { get; init; }
 
         /// <summary>
         /// The action applied to the previous state to arrive at this one.
         /// </summary>
-        internal ITraversal<T>? Action { get; init; }
+        public ITraversal<T>? Action { get; init; }
 
         private double? _cost;
         /// <summary>
         /// The cost associated with this state at this point in the search.
         /// </summary>
         public double Cost => _cost ?? double.NaN;
+
+        private ITraversal<T>[]? _actionPath;
+        public ITraversal<T>[] ActionPath => _actionPath ??= this.GetActionsToNode();
+
+        private T[]? _statePath;
+        public T[] StatePath => _statePath ??= this.GetStatesToNode();
     }
 
-    internal class PathSearchNodeStateComparer<T> : IEqualityComparer<PathSearchState<T>>
+    public class PathSearchNodeStateComparer<T> : IEqualityComparer<PathSearchState<T>>
     {
         private IEqualityComparer<T> stateEqualityComparer;
-        internal PathSearchNodeStateComparer(IEqualityComparer<T>? stateEquality = null)
+        public PathSearchNodeStateComparer(IEqualityComparer<T>? stateEquality = null)
         {
             stateEqualityComparer = stateEquality ?? EqualityComparer<T>.Default;
         }
@@ -60,7 +66,7 @@ namespace SolversLibrary.Search
         }
     }
 
-    internal class PathSearchGoal<T> : IGoalDefinition<PathSearchState<T>>
+    public class PathSearchGoal<T> : IGoalDefinition<PathSearchState<T>>
     {
         private readonly IGoalDefinition<T> _goal;
 
@@ -74,12 +80,12 @@ namespace SolversLibrary.Search
         }
     }
 
-    internal class PathSearchBranchingFunction<T> : IBranchingFunction<PathSearchState<T>>
+    public class PathSearchBranchingFunction<T> : IBranchingFunction<PathSearchState<T>>
     {
         private IBranchingFunction<T> _branchingFunction;
         private readonly Func<T, double, ITraversal<T>, double> _newStateCost;
 
-        internal PathSearchBranchingFunction(
+        public PathSearchBranchingFunction(
             IBranchingFunction<T> branchingFunction,
             Func<T, double, ITraversal<T>, double> newStateCost)
         {
