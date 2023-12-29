@@ -25,11 +25,10 @@ namespace SolversLibrary.Search.Traversal
 
     public class PriorityTraversalStrategy<T> : ITraversalStrategy<T>
     {
-        //private PriorityQueue<T, double> frontier; // TODO: use this instead of custom implementation...
-        private SortedDictionary<double, LinkedList<T>> frontier; // Should we make it possible to use a stack as well???
+        private PriorityQueue<T, double> frontier; // TODO: use this instead of custom implementation...
+        //private SortedDictionary<double, LinkedList<T>> frontier; // Should we make it possible to use a stack as well???
         private Func<T, double> _costFunction;
-        private double minCost;
-        private IEqualityComparer<T>? _equalityComparer;
+        private IEqualityComparer<T> _equalityComparer;
 
         public event Action<T>? Enqueued;
         public event Action<T>? Dequeued;
@@ -38,22 +37,13 @@ namespace SolversLibrary.Search.Traversal
             Func<T, double> costFunction,
             IEqualityComparer<T>? equalityComparer = null)
         {
-            frontier = new SortedDictionary<double, LinkedList<T>>();
+            frontier = new PriorityQueue<T, double>();
             _costFunction = costFunction;
-            minCost = double.PositiveInfinity;
-            _equalityComparer = equalityComparer;
+            _equalityComparer = equalityComparer ?? EqualityComparer<T>.Default;
         }
         public void AddCandidateState(T state)
         {
-            var cost = _costFunction(state);
-            if (frontier.ContainsKey(cost))
-                frontier[cost].AddFirst(state); // frontier acts like last in first out stack (depth first)
-            else
-            {
-                frontier.Add(cost, new LinkedList<T>(new T[] { state }));
-                if (cost < minCost)
-                    minCost = cost;
-            }
+            frontier.Enqueue(state, _costFunction(state));
             Enqueued?.Invoke(state);
         }
 
@@ -64,8 +54,7 @@ namespace SolversLibrary.Search.Traversal
 
         public bool Contains(T state)
         {
-            var cost = _costFunction(state);
-            return frontier.ContainsKey(cost) && frontier[cost].Contains(state, _equalityComparer);
+            return frontier.UnorderedItems.SingleOrDefault(tuple => _equalityComparer.Equals(tuple.Element, state)).Element != null;
         }
 
         public bool ContainsCandidates()
@@ -75,40 +64,9 @@ namespace SolversLibrary.Search.Traversal
 
         public T NextState()
         {
-            var minStates = frontier[minCost];
-            T item;
-            if (minStates.Count == 1)
-            {
-                frontier.Remove(minCost);
-                minCost = frontier.Any() ? frontier.Keys.Min() : double.PositiveInfinity;
-                item = minStates.Single();
-            }
-            else if (minStates.Count > 1)
-            {
-                item = minStates.First!.Value; // frontier acts like last in first out stack (depth first)
-                frontier[minCost].RemoveFirst();
-            }
-            else
-                throw new InvalidOperationException();
-
+            var item = frontier.Dequeue();
             Dequeued?.Invoke(item);
             return item;
-        }
-
-        public void ReplaceCandidateState(T current, T replacement)
-        {
-            var cost = _costFunction(current);
-            if (frontier[cost].Count == 1)
-                frontier.Remove(cost);
-            else
-                frontier[cost].Remove(current);
-
-            AddCandidateState(replacement);
-        }
-
-        public T? Find(T state)
-        {
-            return frontier.Values.SelectMany(list => list).SingleOrDefault(t => _equalityComparer?.Equals(state, t) ?? t.Equals(state));
         }
     }
 }
