@@ -54,7 +54,8 @@ namespace SolversLibrary.Search.Traversal
 
         public bool Contains(T state)
         {
-            return frontier.UnorderedItems.SingleOrDefault(tuple => _equalityComparer.Equals(tuple.Element, state)).Element != null;
+            var possibleMatch = frontier.UnorderedItems.SingleOrDefault(tuple => _equalityComparer.Equals(tuple.Element, state));
+            return possibleMatch.Element != null && possibleMatch.Priority == _costFunction(state);
         }
 
         public bool ContainsCandidates()
