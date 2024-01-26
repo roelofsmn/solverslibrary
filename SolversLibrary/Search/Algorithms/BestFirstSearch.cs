@@ -16,6 +16,7 @@ namespace SolversLibrary.Search.Algorithms
         }
 
         public event Action<T>? Explored;
+        public event Action<T>? FoundSolution;
 
         public T Search(IGoalDefinition<T> goal, T initialState)
         {
@@ -26,7 +27,10 @@ namespace SolversLibrary.Search.Algorithms
             {
                 Explored?.Invoke(node);
                 if (goal.IsTerminal(node))
+                {
+                    FoundSolution?.Invoke(node);
                     return node;
+                }
             }
 
             throw new NoSolutionFoundException();

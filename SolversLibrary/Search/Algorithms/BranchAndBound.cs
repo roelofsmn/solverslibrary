@@ -40,6 +40,7 @@ namespace SolversLibrary.Search.Algorithms
         }
 
         public event Action<T>? Explored;
+        public event Action<T>? FoundSolution;
 
         public T Search(IGoalDefinition<T> goal, T initialState)
         {
@@ -61,7 +62,10 @@ namespace SolversLibrary.Search.Algorithms
                 }
             }
             if (bestSolution != null)
+            {
+                FoundSolution?.Invoke(bestSolution);
                 return bestSolution;
+            }
             else
                 throw new NoSolutionFoundException();
         }

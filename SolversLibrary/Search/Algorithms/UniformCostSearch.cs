@@ -30,9 +30,11 @@ namespace SolversLibrary.Search.Algorithms
 
             _search = new BestFirstSearch<T>(_traverser);
             _search.Explored += (n) => Explored?.Invoke(n); // Just bubble up the event
+            _search.FoundSolution += (n) => FoundSolution?.Invoke(n); // Just bubble up the event
         }
 
         public event Action<T>? Explored;
+        public event Action<T>? FoundSolution;
 
         public T Search(IGoalDefinition<T> goal, T initialState)
         {

@@ -10,6 +10,7 @@ namespace SolversLibrary.Search
     {
         T Search(IGoalDefinition<T> problemStatement, T initialState);
         event Action<T>? Explored;
+        event Action<T>? FoundSolution;
     }
 
     public interface IGoalDefinition<T>
