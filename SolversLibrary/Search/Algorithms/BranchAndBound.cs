@@ -34,6 +34,8 @@ namespace SolversLibrary.Search.Algorithms
                 branching,
                 traverseStrategy,
                 stateEquality);
+            _traverser.Skip += _traverser_Skip;
+
             this.actualCost = stateCost;
         }
 
@@ -48,17 +50,26 @@ namespace SolversLibrary.Search.Algorithms
             {
                 Explored?.Invoke(node);
 
-                if (goal.IsTerminal(node) && actualCost(node) < branching.BestValue)
+                if (goal.IsTerminal(node))
                 {
-                    bestSolution = node;
-                    branching.BestValue = actualCost(node);
-                    continue;
+                    _goalStates.Add(node);
+                    if (actualCost(node) < branching.BestValue)
+                    {
+                        bestSolution = node;
+                        branching.BestValue = actualCost(node);
+                    }
                 }
             }
             if (bestSolution != null)
                 return bestSolution;
             else
                 throw new NoSolutionFoundException();
+        }
+
+        private HashSet<T> _goalStates = new HashSet<T>();
+        private bool _traverser_Skip(T obj)
+        {
+            return _goalStates.Contains(obj);
         }
     }
 

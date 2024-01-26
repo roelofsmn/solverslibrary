@@ -16,5 +16,6 @@ namespace SolversLibrary.Search.Traversal
         IEnumerable<T> Traverse(T start);
 
         event Action<T>? Generated;
+        event Predicate<T>? Skip;
     }
 }

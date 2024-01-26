@@ -24,6 +24,7 @@ namespace SolversLibrary.Search.Traversal
         }
 
         public event Action<T>? Generated;
+        public event Predicate<T>? Skip;
 
         public IEnumerable<T> Traverse(T start)
         {
@@ -35,7 +36,10 @@ namespace SolversLibrary.Search.Traversal
             {
                 T node = strategy.NextState();
                 yield return node;
-               
+
+                if (Skip?.Invoke(node) ?? false)
+                    continue;
+
                 foreach (var traversal in branchingFunction.Branch(node))
                 {
                     var child = traversal.Traverse(node);

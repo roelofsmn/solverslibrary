@@ -12,7 +12,7 @@ namespace SolversLibrary.Search.Algorithms
 
         private BestFirstSearch<T> _search;
 
-        internal UniformCostSearch(
+        public UniformCostSearch(
             Traversers traverserType,
             IBranchingFunction<T> branchingFunction,
             Func<T, double> costFunction,

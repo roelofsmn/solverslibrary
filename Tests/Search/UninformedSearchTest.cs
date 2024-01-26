@@ -148,6 +148,5 @@ namespace Tests.Search
             Assert.Equal(new ITraversal<string>[] { action2, action4 }, searchStates[2].GetActionsToNode().ToArray());
             Assert.Equal(new ITraversal<string>[] { action2, action4, action5 }, searchStates[3].GetActionsToNode().ToArray());
         }
-
     }
 }
