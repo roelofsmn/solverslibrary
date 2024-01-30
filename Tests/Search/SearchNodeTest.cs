@@ -1,5 +1,6 @@
 ﻿using NSubstitute;
 using SolversLibrary.Search;
+using SolversLibrary.Search.Traversal;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,11 +15,11 @@ namespace Tests.Search
         public void GetActionsToNode()
         {
             // Assign
-            var root = Substitute.For<SearchNode<string>>("root", null, null);
-            var action1 = Substitute.For<ISearchAction<string>>();
-            var first = Substitute.For<SearchNode<string>>("first", root, action1);
-            var action2 = Substitute.For<ISearchAction<string>>();
-            var second = Substitute.For<SearchNode<string>>("second", first, action2);
+            var root = Substitute.For<PathSearchState<string>>("root", null, null, 0.0);
+            var action1 = Substitute.For<ITraversal<string>>();
+            var first = Substitute.For<PathSearchState<string>>("first", root, action1, 0.0);
+            var action2 = Substitute.For<ITraversal<string>>();
+            var second = Substitute.For<PathSearchState<string>>("second", first, action2, 0.0);
 
             // Act
             var results = second.GetActionsToNode();

@@ -1,61 +1,44 @@
-﻿using MathNet.Numerics.Distributions;
+﻿using SolversLibrary.Search.Factories;
 using SolversLibrary.Search.Traversal;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace SolversLibrary.Search.Algorithms
 {
-    public class UniformCostSearch<T> : ICostSearchAlgorithm<T>
+    public class UniformCostSearch<T> : ISearchAlgorithm<T>
     {
-        private PriorityTraversalStrategy<CostSearchNode<T>> strategy;
-        private HashSet<T> _explored;
-        private SearchNodeStateComparer<T> searchNodeComparer;
+        private PriorityTraversalStrategy<T> _strategy;
+        private ITraverser<T> _traverser;
 
-        public UniformCostSearch(IEqualityComparer<T>? stateEquality = null)
+        private BestFirstSearch<T> _search;
+
+        public UniformCostSearch(
+            Traversers traverserType,
+            IBranchingFunction<T> branchingFunction,
+            Func<T, double> costFunction,
+            IEqualityComparer<T>? stateEquality = null)
         {
-            strategy = new PriorityTraversalStrategy<CostSearchNode<T>>();
-            _explored = new HashSet<T>(stateEquality);
-            searchNodeComparer = new SearchNodeStateComparer<T>();
+            _strategy = new PriorityTraversalStrategy<T>(
+                costFunction,
+                stateEquality);
+
+            _traverser = TraverserFactory.Create<T>(
+                traverserType,
+                branchingFunction,
+                _strategy,
+                stateEquality);
+
+            _search = new BestFirstSearch<T>(_traverser);
+            _search.Explored += (n) => Explored?.Invoke(n); // Just bubble up the event
+            _search.FoundSolution += (n) => FoundSolution?.Invoke(n); // Just bubble up the event
         }
-        public CostSearchSolution<T> Search(ICostSearchProblem<T> problemStatement, T initialState)
+
+        public event Action<T>? Explored;
+        public event Action<T>? FoundSolution;
+
+        public T Search(IGoalDefinition<T> goal, T initialState)
         {
-            strategy.Clear();
-            _explored.Clear();
-
-            if (problemStatement.IsTerminal(initialState))
-                return new CostSearchSolution<T>(initialState, Array.Empty<ISearchAction<T>>(), initialState, 0.0);
-
-            strategy.AddCandidateState(new CostSearchNode<T>(initialState, null, null, 0.0));
-
-            while (strategy.ContainsCandidates())
-            {
-                CostSearchNode<T> node = strategy.NextState();
-                if (problemStatement.IsTerminal(node.State))
-                    return new CostSearchSolution<T>(
-                        initialState,
-                        node.GetActionsToNode(),
-                        node.State,
-                        node.Cost);
-
-                _explored.Add(node.State);
-                foreach (var action in problemStatement.Branch(node.State))
-                {
-                    var childState = action.Apply(node.State);
-                    var actionCost = action.Cost(node.State);
-                    var child = new CostSearchNode<T>(childState, node, action, node.Cost + actionCost);
-                    CostSearchNode<T>? matchingSearchNode = strategy.Find(child, searchNodeComparer);
-                    if (!_explored.Contains(childState) && matchingSearchNode == null)
-                        strategy.AddCandidateState(child);
-                    else if (matchingSearchNode != null && matchingSearchNode.Cost > child.Cost)
-                        strategy.ReplaceCandidateState(matchingSearchNode, child);
-                }
-            }
-            throw new NoSolutionFoundException();
+            return _search.Search(goal, initialState);
         }
     }
 }

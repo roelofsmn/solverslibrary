@@ -5,7 +5,7 @@ namespace SolversLibrary.Search.Traversal
 {
     public class GraphTraverser<T> : ITraverser<T>
     {
-        private readonly IExploreFunction<T, T> branchingFunction;
+        private readonly IBranchingFunction<T> branchingFunction;
         private readonly ITraversalStrategy<T> strategy;
         private readonly HashSet<T> explored;
 
@@ -18,7 +18,7 @@ namespace SolversLibrary.Search.Traversal
         /// <exception cref="ArgumentNullException"></exception>
         /// <remarks>We could have used an enum for the strategy, and a factory to create a new strategy object on every Traverse call. Instead, we opted for the Clear() method on the strategy interface, because this reuses the same object (hence less GC).</remarks>
         public GraphTraverser(
-            IExploreFunction<T, T> generator,
+            IBranchingFunction<T> generator,
             ITraversalStrategy<T> strategy,
             IEqualityComparer<T>? stateEquality = null)
         {
@@ -26,6 +26,9 @@ namespace SolversLibrary.Search.Traversal
             this.strategy = strategy ?? throw new ArgumentNullException(nameof(strategy));
             explored = new HashSet<T>(stateEquality);
         }
+
+        public event Action<T>? Generated;
+        public event Predicate<T>? Skip;
 
         public IEnumerable<T> Traverse(T start)
         {
@@ -39,10 +42,16 @@ namespace SolversLibrary.Search.Traversal
                 T node = strategy.NextState();
                 yield return node;
 
+                if (Skip?.Invoke(node) ?? false)
+                    continue;
+
                 explored.Add(node);
-                
-                foreach (var child in branchingFunction.Branch(node))
+
+                foreach (var traversal in branchingFunction.Branch(node))
                 {
+                    var child = traversal.Traverse(node);
+                    Generated?.Invoke(child);
+
                     if (!explored.Contains(child) && !strategy.Contains(child))
                         strategy.AddCandidateState(child);
                 }

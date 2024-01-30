@@ -6,8 +6,8 @@ using System.Threading.Tasks;
 
 namespace SolversLibrary.Search.Traversal
 {
-    public interface IExploreFunction<TState, TTraversal>
+    public interface IBranchingFunction<T>
     {
-        IEnumerable<TTraversal> Branch(TState state);
-    }    
+        IEnumerable<ITraversal<T>> Branch(T state);
+    }
 }

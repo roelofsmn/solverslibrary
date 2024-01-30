@@ -10,7 +10,7 @@ using SolversLibrary.Search.Traversal;
 
 namespace Tests.Search
 {
-    public class AstarSearchTest
+    public class BranchAndBoundTest
     {
         private readonly IGoalDefinition<string> problem;
         private readonly ITraversal<string> action1;
@@ -19,11 +19,10 @@ namespace Tests.Search
         private readonly ITraversal<string> action4;
         private readonly ITraversal<string> action5;
         private readonly IBranchingFunction<string> branching;
-        private readonly IHeuristic<string> heuristic;
         private readonly string initialState;
         private List<PathSearchState<string>> searchStates;
 
-        public AstarSearchTest()
+        public BranchAndBoundTest()
         {
             problem = Substitute.For<IGoalDefinition<string>>();
             problem.IsTerminal("sibiu").Returns(false);
@@ -79,37 +78,36 @@ namespace Tests.Search
             branching.Branch("fagaras").Returns(new ITraversal<string>[] { action3, action6 });
             branching.Branch("bucharest").Returns(new ITraversal<string>[] { action9, action10 });
 
-            heuristic = Substitute.For<IHeuristic<string>>();
-            heuristic.Heuristic("sibiu").Returns(253);
-            heuristic.Heuristic("rimnicu").Returns(193);
-            heuristic.Heuristic("fagaras").Returns(176);
-            heuristic.Heuristic("pitesti").Returns(100);
-            heuristic.Heuristic("bucharest").Returns(0);
-
             initialState = "sibiu";
 
             searchStates = new List<PathSearchState<string>>();
         }
 
+        private void BnB_ProgressUpdated(PathSearchState<string> obj)
+        {
+            searchStates.Add(obj);
+        }
+
         [Fact]
-        public void AstarSearch()
+        public void BranchAndBound_DepthFirst_Search()
         {
             // See section 3.4, page 85 of Artificial Intelligence: A Modern Approach, 3rd edition, S.J. Russell and P. Norvig
             // Assign
-
-            var pathBranch = new PathSearchBranchingFunction<string>(branching, (state, cost, traversal) => cost + traversal.Cost(state) ?? 0);
-            var astar = new AstarSearch<PathSearchState<string>>(
+            var dfs = new DepthFirstTraversalStrategy<PathSearchState<string>>();
+            var bnb = new BranchAndBound<PathSearchState<string>>(
                 SolversLibrary.Search.Factories.Traversers.Graph,
-                pathBranch,
-                (pathNode) => pathNode.Cost,
-                (pathNode) => heuristic.Heuristic(pathNode.State)
-                );
-            astar.Explored += Astar_ProgressUpdated;
+                dfs,
+                new PathSearchBranchingFunction<string>(branching, (state, cost, traversal) => cost + traversal?.Cost(state) ?? 0.0),
+                sn => sn.Cost,
+                new PathSearchNodeStateComparer<string>());
+
+            bnb.Explored += BnB_ProgressUpdated;
+
+            var goal = Substitute.For<IGoalDefinition<PathSearchState<string>>>();
+            goal.IsTerminal(Arg.Any<PathSearchState<string>>()).Returns(x => problem.IsTerminal(((PathSearchState<string>)x[0]).State));
 
             // Act
-            var pathGoal = new PathSearchGoal<string>(problem);
-            var pathInitialState = new PathSearchState<string>(initialState, null, null, 0.0);
-            var result = astar.Search(pathGoal, pathInitialState);
+            var result = bnb.Search(goal, new PathSearchState<string>(initialState, null, null, 0));
 
             // Assert
             // Check final result
@@ -118,31 +116,21 @@ namespace Tests.Search
             Assert.Equal("bucharest", result.State);
 
             // Check search path
-            Assert.Equal(5, searchStates.Count);
+            Assert.Equal(6, searchStates.Count);
+
             Assert.Equal(new ITraversal<string>[] { }, searchStates[0].GetActionsToNode().ToArray());
-            Assert.Equal(0, searchStates[0].Cost); // heuristic cost
+            Assert.Equal(new ITraversal<string>[] { action2 }, searchStates[1].GetActionsToNode().ToArray());
+            Assert.Equal(new ITraversal<string>[] { action2, action4 }, searchStates[2].GetActionsToNode().ToArray());
+            // Next we expand the full path:
+            Assert.Equal(new ITraversal<string>[] { action2, action4, action5 }, searchStates[3].GetActionsToNode().ToArray());
+            // we set best value to 278, but continue the search (we don't know this is the best path already...)
 
-            // at this point, rimnicu has 193 + 80 = 273, and fagaras has 176 + 99 = 275
-            Assert.Equal(new ITraversal<string>[] { action2 }, searchStates[1].GetActionsToNode().ToArray()); // because it has lowest total estimated cost
-            Assert.Equal(80, searchStates[1].Cost);
-            // adds pitesti with total cost 177 + 100 = 277
-
-            Assert.Equal(new ITraversal<string>[] { action1 }, searchStates[2].GetActionsToNode().ToArray()); // because it has lowest cost
-            Assert.Equal(99, searchStates[2].Cost);
-            // adds bucharest with total cost 310
-
-            // we first explore the lower cost path (action2)
-            Assert.Equal(new ITraversal<string>[] { action2, action4 }, searchStates[3].GetActionsToNode().ToArray());
-            Assert.Equal(177, searchStates[3].Cost);
-            // now, the path (action2, action4, action5) is added to the frontier, with a cost of 278, and is expanded next.
-
-            Assert.Equal(new ITraversal<string>[] { action2, action4, action5 }, searchStates[4].GetActionsToNode().ToArray()); // arrives at bucharest
-            Assert.Equal(278, searchStates[4].Cost);
+            Assert.Equal(new ITraversal<string>[] { action1 }, searchStates[4].GetActionsToNode().ToArray());
+            // we expand the full path:
+            Assert.Equal(new ITraversal<string>[] { action1, action3 }, searchStates[5].GetActionsToNode().ToArray());
+            // It is terminal, but not better
+            // Now we're done... as there are no more states to expand
         }
 
-        private void Astar_ProgressUpdated(PathSearchState<string> obj)
-        {
-            searchStates.Add(obj);
-        }
     }
 }
