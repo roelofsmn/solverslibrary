@@ -18,7 +18,7 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
     - name: Restore packages
@@ -27,7 +27,7 @@ jobs:
       run: dotnet build ${{ env.PROJECT_PATH }} --no-restore --configuration Release
     - name: Get version
       id: version
-      uses: battila7/get-version-action@v2
+      uses: battila7/get-version-action@v2.2.1
     - name: Pack
       run: dotnet pack ${{ env.PROJECT_PATH }} --no-restore -c Release -p:PackageVersion=${{ steps.version.outputs.version-without-v }} --output ${{ env.OUTPUT_PATH }}
     - name: Publish
